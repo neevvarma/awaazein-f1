@@ -1,67 +1,69 @@
-import { NextRequest, NextResponse } from "next/server";
+// app/api/contact/route.ts
+import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
 
-function esc(s: string) {
-  return s.replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  }[c] as string));
-}
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const { name, email, subject, message, token } = await req.json();
+    const { name = "", email = "", subject = "", message = "", token = "" } = await req.json();
 
-    // Honeypot (bots will fill this)
-    if (typeof token === "string" && token.trim() !== "") {
-      return NextResponse.json({ ok: true });
+    // Honeypot
+    if (token) return NextResponse.json({ ok: true });
+
+    if (!email || !message) {
+      return NextResponse.json(
+        { ok: false, error: "Email and message are required." },
+        { status: 400 }
+      );
     }
 
-    const n = (name || "").toString().trim();
-    const e = (email || "").toString().trim();
-    const sub = ((subject || "").toString().trim()) || "New message";
-    const msg = (message || "").toString().trim();
+    const safe = (s: string) =>
+      String(s).replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c] as string));
 
-    if (!n || !e || !msg) {
-      return NextResponse.json({ ok: false, error: "Please fill out all required fields." }, { status: 400 });
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
-      return NextResponse.json({ ok: false, error: "Please enter a valid email address." }, { status: 400 });
-    }
-    if (msg.length > 5000) {
-      return NextResponse.json({ ok: false, error: "Message is too long." }, { status: 400 });
-    }
-
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const from = process.env.RESEND_FROM || "Awaazein Contact <no-reply@your-domain.com>";
     const to = process.env.CONTACT_TO || "awaazeinexec@gmail.com";
-    const from = process.env.CONTACT_FROM || "Awaazein F1 <onboarding@resend.dev>";
+    const sub = subject?.trim() || "New message";
 
     const html = `
-      <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; line-height:1.5">
-        <p>You received a new message from the website contact form:</p>
-        <p><strong>Name:</strong> ${esc(n)}<br/>
-           <strong>Email:</strong> ${esc(e)}<br/>
-           <strong>Subject:</strong> ${esc(sub)}</p>
-        <p><strong>Message:</strong><br/>${esc(msg).replace(/\n/g, "<br/>")}</p>
+      <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.5;color:#111">
+        <h2 style="margin:0 0 8px">New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${safe(name)}</p>
+        <p><strong>Email:</strong> ${safe(email)}</p>
+        <p><strong>Subject:</strong> ${safe(sub)}</p>
+        <hr style="border:none;border-top:1px solid #ddd;margin:12px 0" />
+        <p style="white-space:pre-wrap">${safe(message)}</p>
       </div>
     `;
+    const text = `New Contact Form Submission
+Name: ${name}
+Email: ${email}
+Subject: ${sub}
 
-    await resend.emails.send({
+${message}
+`;
+
+    const sent = await resend.emails.send({
       from,
       to,
-      reply_to: e,
+      replyTo: email, // ✅ correct key
       subject: `Contact Form: ${sub}`,
       html,
+      text,
     });
+
+    if ((sent as any)?.error) {
+      return NextResponse.json(
+        { ok: false, error: (sent as any).error.message || "Email send failed." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ ok: false, error: "Server error. Please try again." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Server error." }, { status: 500 });
   }
 }
