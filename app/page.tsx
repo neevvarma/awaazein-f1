@@ -3,13 +3,13 @@
 import React from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { CalendarDays, MapPin, Users, Mail, X, Flag } from "lucide-react";
+import { CalendarDays, MapPin, Users, X, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Orbitron } from "next/font/google";
 
 /* ────────────────────────────────────────────────────────────────
    Awaazein F1 — Site
-   Home • About • Venue • Line Up • Volunteer • Sponsorship • Gallery • Board • Contact
+   Home • About • Venue • Line Up • Volunteer • Board • Sponsorship • Gallery • Contact
 ──────────────────────────────────────────────────────────────── */
 
 const EVENT_DATE = new Date("2026-02-21T18:00:00-06:00"); // Feb 21, 2026
@@ -70,107 +70,38 @@ function useCountdown(to: Date) {
   return t;
 }
 
-/* ── BIG + BRIGHT (inverted) NEON BACKGROUND ── */
-const Streak: React.FC<{
-  top: string;
-  rotate: number;
-  hue: "red" | "cyan";
-  delay?: number;
-  duration?: number;
-  widthVW?: number;
-  thick?: number;
-  opacity?: number;
-}> = ({ top, rotate, hue, delay = 0, duration = 10.8, widthVW = 120, thick = 8, opacity = 1 }) => {
-  const rgb = hue === "red" ? "225,6,0" : "0,224,255";
-  const common: React.CSSProperties = {
-    position: "absolute",
-    top,
-    left: "-35%",
-    width: `${widthVW}vw`,
-    transform: `rotate(${rotate}deg)`,
-    borderRadius: 9999,
-    opacity,
-    pointerEvents: "none",
-  };
-  return (
-    <>
-      <motion.div
-        initial={{ x: "-30%" }}
-        animate={{ x: "140%" }}
-        transition={{ duration, delay, repeat: Infinity, ease: "linear" }}
-        style={{
-          ...common,
-          height: thick * 3,
-          background: `linear-gradient(90deg, transparent, rgba(${rgb},0.85), transparent)`,
-          filter: "blur(18px) saturate(160%)",
-        }}
-        className="mix-blend-screen"
-      />
-      <motion.div
-        initial={{ x: "-30%" }}
-        animate={{ x: "140%" }}
-        transition={{ duration, delay, repeat: Infinity, ease: "linear" }}
-        style={{
-          ...common,
-          height: thick,
-          background: `linear-gradient(90deg, transparent, rgba(${rgb},1), transparent)`,
-          boxShadow: `0 0 26px rgba(${rgb},0.9), 0 0 64px rgba(${rgb},0.65)`,
-          filter: "blur(1px)",
-        }}
-        className="mix-blend-screen"
-      />
-    </>
-  );
-};
-
+/* ── Background neon sweeps (amped up red/blue) ── */
 const SpeedLines: React.FC = () => (
   <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+    {/* Big red/blue radial glows */}
     <div
-      className="absolute -inset-48"
+      className="absolute -inset-40"
       style={{
-        background: [
-          "radial-gradient(1500px 900px at 12% -4%, rgba(225,6,0,0.55), transparent 70%)",
-          "radial-gradient(1400px 820px at 92% 8%, rgba(0,224,255,0.45), transparent 68%)",
-          "radial-gradient(1300px 900px at 18% 78%, rgba(225,6,0,0.18), transparent 66%)",
-          "radial-gradient(1300px 900px at 85% 82%, rgba(0,224,255,0.18), transparent 66%)",
-        ].join(","),
-        filter: "saturate(200%) blur(0.4px)",
-      }}
-    />
-    <div
-      className="absolute left-[-20%] top-[8%] w-[160%] h-[180px] mix-blend-screen"
-      style={{
-        transform: "rotate(10deg)",
         background:
-          "linear-gradient(90deg, transparent, rgba(225,6,0,0.4), rgba(225,6,0,0.85), rgba(225,6,0,0.4), transparent)",
-        filter: "blur(14px) saturate(180%)",
+          // flipped/stronger: more red at top-right, more blue at bottom-left
+          "radial-gradient(1200px 800px at 85% 10%, rgba(225,6,0,0.40), transparent 60%)," +
+          "radial-gradient(1300px 900px at 15% 85%, rgba(0,224,255,0.40), transparent 60%)",
+        filter: "saturate(170%) blur(0.5px)",
       }}
     />
+    {/* Hard neon strokes */}
     <div
-      className="absolute left-[-20%] top-[18%] w-[160%] h-[180px] mix-blend-screen"
+      className="absolute -right-1/3 -top-36 h-[155%] w-[90%] rotate-[18deg] opacity-90"
+      style={{ background: "linear-gradient(90deg, transparent, rgba(225,6,0,0.75), transparent)" }}
+    />
+    <div
+      className="absolute -left-1/3 top-1/4 h-[140%] w-[85%] -rotate-[12deg] opacity-90"
+      style={{ background: "linear-gradient(90deg, transparent, rgba(0,224,255,0.75), transparent)" }}
+    />
+    {/* Fine scanning lines */}
+    <div
+      className="absolute inset-0 opacity-35"
       style={{
-        transform: "rotate(-10deg)",
         background:
-          "linear-gradient(90deg, transparent, rgba(0,224,255,0.4), rgba(0,224,255,0.9), rgba(0,224,255,0.4), transparent)",
-        filter: "blur(14px) saturate(180%)",
+          "repeating-linear-gradient(180deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 3px)",
+        mixBlendMode: "screen",
       }}
     />
-    <div
-      className="absolute -right-1/3 -top-24 h-[150%] w-[85%] rotate-[18deg] opacity-90"
-      style={{ background: "linear-gradient(90deg, transparent, rgba(225,6,0,0.75), transparent)", filter: "saturate(180%)" }}
-    />
-    <div
-      className="absolute -left-1/3 top-1/3 h-[130%] w-[75%] -rotate-[12deg] opacity-90"
-      style={{ background: "linear-gradient(90deg, transparent, rgba(0,224,255,0.7), transparent)", filter: "saturate(180%)" }}
-    />
-    <Streak top="9%" rotate={9} hue="red" delay={0.0} duration={10.6} thick={8} />
-    <Streak top="13%" rotate={-8} hue="cyan" delay={0.6} duration={11.2} thick={8} />
-    <Streak top="17%" rotate={7} hue="red" delay={1.2} duration={10.0} thick={8} />
-    <Streak top="22%" rotate={-6} hue="cyan" delay={1.8} duration={10.4} thick={8} />
-    <Streak top="28%" rotate={5} hue="red" delay={2.4} duration={9.8} thick={8} opacity={0.9} />
-    <Streak top="34%" rotate={-5} hue="cyan" delay={3.0} duration={10.2} thick={8} opacity={0.9} />
-    <Streak top="64%" rotate={10} hue="red" delay={1.1} duration={12.2} thick={7} opacity={0.85} />
-    <Streak top="70%" rotate={-10} hue="cyan" delay={1.9} duration={12.6} thick={7} opacity={0.85} />
   </div>
 );
 
@@ -178,7 +109,7 @@ const SpeedLines: React.FC = () => (
 const TrackParallax: React.FC = () => {
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, -220]);
-  const opacity = useTransform(scrollYProgress, [0, 0.6, 1], [0.45, 0.2, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 0.6, 1], [0.35, 0.15, 0]);
 
   return (
     <motion.svg
@@ -189,27 +120,27 @@ const TrackParallax: React.FC = () => {
     >
       <defs>
         <linearGradient id="trackGrad" x1="0" x2="1">
-          <stop offset="0%" stopColor="#00E0FF" stopOpacity="1" />
-          <stop offset="100%" stopColor="#E10600" stopOpacity="1" />
+          <stop offset="0%" stopColor="#00E0FF" stopOpacity="0.85" />
+          <stop offset="100%" stopColor="#E10600" stopOpacity="0.85" />
         </linearGradient>
       </defs>
       <path
         d="M50,700 C200,650 350,620 500,650 C650,680 800,760 990,710"
         fill="none"
         stroke="url(#trackGrad)"
-        strokeWidth="8"
+        strokeWidth="10"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.8"
+        opacity="0.6"
       />
       <path
         d="M120,620 C300,570 450,560 620,590 C780,615 950,660 1100,640"
         fill="none"
         stroke="url(#trackGrad)"
-        strokeWidth="4"
+        strokeWidth="6"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.55"
+        opacity="0.35"
       />
     </motion.svg>
   );
@@ -245,7 +176,7 @@ const Section: React.FC<React.PropsWithChildren<{ id?: string; title?: string }>
 const CheckeredDivider = () => (
   <div
     aria-hidden
-    className="h-3 w-full my-12 rounded [background:repeating-linear-gradient(45deg,#fff_0_10px,#000_10px_20px)] opacity-40"
+    className="h-3 w-full my-12 rounded [background:repeating-linear-gradient(45deg,#fff_0_10px,#000_10px_20px)] opacity-35"
   />
 );
 
@@ -257,7 +188,7 @@ const Stat: React.FC<{ label: string; value: string; icon?: React.ReactNode }> =
   <div className="flex items-center gap-3">
     <div className="h-10 w-10 rounded-full border border-white/20 grid place-items-center">{icon}</div>
     <div>
-      <div className="text-white/70 text-xs uppercase tracking-widest">{label}</div>
+      <div className="text-white/65 text-xs uppercase tracking-widest">{label}</div>
       <div className="text-white text-lg font-semibold">{value}</div>
     </div>
   </div>
@@ -270,8 +201,8 @@ const ComingSoonModal: React.FC<{ open: boolean; onClose: () => void }> = ({ ope
     <div className="fixed inset-0 z-[100] grid place-items-center bg-black/70 backdrop-blur">
       <div className="w-[90%] max-w-md rounded-2xl border border-white/15 bg-white/10 p-6 text-white shadow-xl">
         <h3 className={cx("text-xl font-semibold mb-2", ACCENT_HEADING)}>Tickets — Coming Soon</h3>
-        <p className="text-white/90">
-          Tickets for Awaazein (Feb 21, 2026 &bull; Irving, TX) will be released soon. Check back here or follow our socials.
+        <p className="text-white/85">
+          Tickets for Awaazein (Feb 21, 2026 • Irving, TX) will be released soon. Check back here or follow our socials.
         </p>
         <div className="mt-5 flex justify-end">
           <Button onClick={onClose} className="bg-[#E10600] hover:bg-[#c70500]">Close</Button>
@@ -312,13 +243,146 @@ const Lightbox: React.FC<{ src: string | null; alt: string; onClose: () => void 
         <X size={18} />
       </button>
       <div className="relative w-[92vw] h-[92vh]" onClick={(e) => e.stopPropagation()}>
-        <Image src={src!} alt={alt} fill className="object-contain select-none" priority />
+        <Image src={src} alt={alt} fill className="object-contain select-none" priority />
       </div>
     </div>
   );
 };
 
-/* ── F1 Driver Card ── */
+/* ── Contact Form ── */
+const ContactForm: React.FC = () => {
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [subject, setSubject] = React.useState("");
+  const [message, setMessage] = React.useState("");
+  const [token, setToken] = React.useState(""); // honeypot
+  const [status, setStatus] = React.useState<"idle" | "sending" | "success" | "error">("idle");
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setStatus("sending");
+    setError(null);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, subject, message, token }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        setStatus("error");
+        setError(json.error || "Something went wrong.");
+        return;
+      }
+      setStatus("success");
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+    } catch {
+      setStatus("error");
+      setError("Network error. Please try again.");
+    }
+  }
+
+  return (
+    <div className="rounded-2xl p-8 border ring-1 ring-white/15 bg-white/10">
+      <p className="text-white/90 mb-6">
+        Have a question or want to get in touch with the Awaazein team? Send us a message here and we will respond by email.
+      </p>
+
+      <form onSubmit={onSubmit} className="grid gap-4">
+        {/* Honeypot (hidden) */}
+        <input
+          type="text"
+          name="company"
+          autoComplete="off"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          className="hidden"
+          tabIndex={-1}
+        />
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-white/80 mb-1">Name</label>
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
+              placeholder="Your name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-white/80 mb-1">Email</label>
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
+              placeholder="you@example.com"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm text-white/80 mb-1">Subject (optional)</label>
+          <input
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="w-full rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
+            placeholder="Subject"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-white/80 mb-1">Message</label>
+          <textarea
+            required
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={6}
+            className="w-full rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
+            placeholder="Type your message..."
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            type="submit"
+            disabled={status === "sending"}
+            className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_22px_rgba(225,6,0,0.45)]"
+          >
+            {status === "sending" ? "Sending..." : "Send Message"}
+          </Button>
+
+          <a
+            href="mailto:awaazeinexec@gmail.com"
+            className="text-white/80 underline hover:text-white text-sm"
+          >
+            Or email us directly
+          </a>
+        </div>
+
+        {status === "success" && (
+          <div className="mt-3 text-sm text-green-300" role="status" aria-live="polite">
+            Thanks! Your message was sent.
+          </div>
+        )}
+        {status === "error" && (
+          <div className="mt-3 text-sm text-red-300" role="alert">
+            {error}
+          </div>
+        )}
+      </form>
+    </div>
+  );
+};
+
+/* ── F1 Driver Card (labels BELOW the image) ── */
 type Driver = { name: string; title: string; img: string };
 
 const DriverCard: React.FC<{
@@ -332,14 +396,19 @@ const DriverCard: React.FC<{
       className="group relative rounded-3xl overflow-hidden ring-1 ring-white/15 bg-gradient-to-br from-[#0B1528] to-[#0A0F1E] shadow-[0_10px_50px_rgba(0,0,0,0.35)] cursor-zoom-in"
       onClick={() => onOpen(driver.img, `${driver.name} — ${driver.title}`)}
     >
+      {/* Neon livery slash behind */}
       <div
-        className="absolute -top-16 -right-24 h-60 w-96 rotate-12 opacity-80"
+        className="absolute -top-16 -right-24 h-60 w-96 rotate-12 opacity-70"
         style={{
-          background: "linear-gradient(90deg, rgba(0,224,255,0.95), rgba(225,6,0,0.95))",
+          background:
+            "linear-gradient(90deg, rgba(0,224,255,0.85), rgba(225,6,0,0.85))",
           filter: "blur(18px)",
         }}
       />
+      {/* subtle checkered corner */}
       <div className="absolute top-0 left-0 h-20 w-20 opacity-30 [background:repeating-linear-gradient(45deg,#fff_0_8px,#000_8px_16px)] rounded-br-3xl" />
+
+      {/* Image */}
       <div className="relative aspect-[4/5]">
         <Image
           src={driver.img}
@@ -349,6 +418,8 @@ const DriverCard: React.FC<{
           sizes="(min-width: 768px) 360px, 100vw"
         />
       </div>
+
+      {/* Labels BELOW the image */}
       {BOARD_LABEL_POSITION === "below" && (
         <div className="relative px-4 py-3 md:px-5 md:py-4 bg-black/30 backdrop-blur rounded-b-3xl border-t border-white/10">
           <div className="text-xs text-white/70 uppercase tracking-widest">{driver.title}</div>
@@ -357,35 +428,78 @@ const DriverCard: React.FC<{
           </div>
         </div>
       )}
-      <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-transparent group-hover:ring-[#00E0FF]/60 group-hover:shadow-[0_0_40px_rgba(0,224,255,0.45)] transition-all duration-300" />
+
+      {/* Outer neon on hover */}
+      <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-transparent group-hover:ring-[#00E0FF]/50 group-hover:shadow-[0_0_35px_rgba(0,224,255,0.35)] transition-all duration-300" />
     </motion.div>
   );
 };
 
-/* ── Collage item for the Gallery ── */
-const CollageItem: React.FC<{
-  src: string;
-  alt: string;
-  cls: string;
-  onOpen: (src: string, alt: string) => void;
-}> = ({ src, alt, cls, onOpen }) => (
-  <div
-    className={cx(
-      "relative overflow-hidden rounded-xl ring-1 ring-white/10 bg-black/20 cursor-zoom-in group",
-      "shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
-      cls
-    )}
-    onClick={() => onOpen(src, alt)}
-  >
-    <Image
-      src={src}
-      alt={alt}
-      fill
-      sizes="(min-width:1280px) 25vw, (min-width:768px) 33vw, (min-width:640px) 50vw, 100vw"
-      className="object-cover transition-transform duration-500 group-hover:scale-[1.03] group-hover:brightness-110"
-    />
-  </div>
-);
+/* ── Gallery (Puzzle/Tessellated) ── */
+const stageImages = Array.from({ length: 19 }, (_, i) => `/stage/Stage${i + 1}.JPG`);
+
+// Predefined layout pattern for a puzzle feel (12-col grid on lg, 6 on sm)
+const puzzlePattern: Array<{ sm: string; lg: string; aspect: string }> = [
+  { sm: "sm:col-span-3", lg: "lg:col-span-4", aspect: "aspect-[16/10]" },
+  { sm: "sm:col-span-3", lg: "lg:col-span-3", aspect: "aspect-[1/1]" },
+  { sm: "sm:col-span-3", lg: "lg:col-span-5", aspect: "aspect-[21/10]" },
+
+  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[3/4]" },
+  { sm: "sm:col-span-4", lg: "lg:col-span-6", aspect: "aspect-[16/9]" },
+  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[4/5]" },
+
+  { sm: "sm:col-span-3", lg: "lg:col-span-4", aspect: "aspect-[4/3]" },
+  { sm: "sm:col-span-3", lg: "lg:col-span-4", aspect: "aspect-[4/5]" },
+  { sm: "sm:col-span-3", lg: "lg:col-span-4", aspect: "aspect-[16/9]" },
+
+  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[5/4]" },
+  { sm: "sm:col-span-4", lg: "lg:col-span-6", aspect: "aspect-[18/9]" },
+  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[3/4]" },
+
+  { sm: "sm:col-span-3", lg: "lg:col-span-5", aspect: "aspect-[21/10]" },
+  { sm: "sm:col-span-3", lg: "lg:col-span-3", aspect: "aspect-[1/1]" },
+  { sm: "sm:col-span-3", lg: "lg:col-span-4", aspect: "aspect-[4/3]" },
+
+  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[5/6]" },
+  { sm: "sm:col-span-4", lg: "lg:col-span-6", aspect: "aspect-[16/9]" },
+  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[3/4]" },
+
+  { sm: "sm:col-span-6", lg: "lg:col-span-12", aspect: "aspect-[32/9]" },
+];
+
+const PuzzleGallery: React.FC<{ onOpen: (src: string, alt: string) => void }> = ({ onOpen }) => {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-6 lg:grid-cols-12 gap-3 md:gap-4">
+      {stageImages.map((src, i) => {
+        const layout = puzzlePattern[i % puzzlePattern.length];
+        return (
+          <div
+            key={src}
+            className={cx(
+              "relative overflow-hidden rounded-2xl ring-1 ring-white/15 cursor-zoom-in group",
+              "bg-black/30",
+              layout.sm,
+              layout.lg,
+              layout.aspect
+            )}
+            onClick={() => onOpen(src, `Stage photo ${i + 1}`)}
+          >
+            <Image
+              src={src}
+              alt={`Stage photo ${i + 1}`}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              sizes="(min-width: 1024px) 25vw, (min-width:640px) 33vw, 50vw"
+            />
+            {/* subtle gradient and neon border on hover */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 pointer-events-none" />
+            <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-transparent group-hover:ring-[#00E0FF]/40 group-hover:shadow-[0_0_40px_rgba(0,224,255,0.25)] transition-all" />
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 /* ── Page ── */
 export default function Page() {
@@ -420,7 +534,7 @@ export default function Page() {
   // Advisors
   const advisors: Driver[] = [
     { name: "Rhea Joshi", title: "Advisor", img: "/board/advisors/rhea.jpeg" },
-    { name: "Arya Biju",  title: "Advisor", img: "/board/advisors/arya.jpeg" },
+    { name: "Arya Biju", title: "Advisor", img: "/board/advisors/arya.jpeg" },
   ];
 
   // Logistics
@@ -432,8 +546,8 @@ export default function Page() {
 
   // Finance
   const finance: Driver[] = [
-    { name: "Khushi Patel",   title: "Finance", img: "/board/finance/khuship.jpeg" },
-    { name: "Jay Vellanki",   title: "Finance", img: "/board/finance/jay.jpeg" },
+    { name: "Khushi Patel", title: "Finance", img: "/board/finance/khuship.jpeg" },
+    { name: "Jay Vellanki", title: "Finance", img: "/board/finance/jay.jpeg" },
     { name: "Manvitha Edara", title: "Finance", img: "/board/finance/manvi.jpeg" },
   ];
 
@@ -445,10 +559,10 @@ export default function Page() {
 
   // Liaison Coordinators
   const liaisonCoordinators: Driver[] = [
-    { name: "Mahak Rawal",         title: "Liaison Coordinator", img: "/board/lc/mahak.jpg" },
-    { name: "Prakrit Sinha",       title: "Liaison Coordinator", img: "/board/lc/prakrit.jpg" },
-    { name: "Tamanna Vijay",       title: "Liaison Coordinator", img: "/board/lc/tamanna.jpg" },
-    { name: "Mahintha Karthik",    title: "Liaison Coordinator", img: "/board/lc/mahintha.jpg" },
+    { name: "Mahak Rawal", title: "Liaison Coordinator", img: "/board/lc/mahak.jpg" },
+    { name: "Prakrit Sinha", title: "Liaison Coordinator", img: "/board/lc/prakrit.jpg" },
+    { name: "Tamanna Vijay", title: "Liaison Coordinator", img: "/board/lc/tamanna.jpg" },
+    { name: "Mahintha Karthik", title: "Liaison Coordinator", img: "/board/lc/mahintha.jpg" },
   ];
 
   // After Party
@@ -459,63 +573,37 @@ export default function Page() {
 
   // Mixer
   const mixer: Driver[] = [
-    { name: "Sarvani Nookala",  title: "Mixer", img: "/board/mixer/sarvani.jpeg" },
-    { name: "Sathvika Seeram",  title: "Mixer", img: "/board/mixer/sathvika.jpeg" },
-    { name: "Samarth Bikki",    title: "Mixer", img: "/board/mixer/samarth.jpeg" },
+    { name: "Sarvani Nookala", title: "Mixer", img: "/board/mixer/sarvani.jpeg" },
+    { name: "Sathvika Seeram", title: "Mixer", img: "/board/mixer/sathvika.jpeg" },
+    { name: "Samarth Bikki", title: "Mixer", img: "/board/mixer/samarth.jpeg" },
   ];
 
   // Registration
   const registration: Driver[] = [
     { name: "Aarya Chipalkatti", title: "Registration", img: "/board/reg/aarya.jpg" },
-    { name: "Sai Mariappan",     title: "Registration", img: "/board/reg/sai.jpg" },
+    { name: "Sai Mariappan", title: "Registration", img: "/board/reg/sai.jpg" },
   ];
 
   // Hospitality
   const hospitality: Driver[] = [
-    { name: "Olivia Riju",        title: "Hospitality", img: "/board/hosp/olivia.jpg" },
-    { name: "Saloni Janorkar",    title: "Hospitality", img: "/board/hosp/saloni.jpg" },
-    { name: "Tarana Nagarajan",   title: "Hospitality", img: "/board/hosp/tarana.jpg" },
+    { name: "Olivia Riju", title: "Hospitality", img: "/board/hosp/olivia.jpg" },
+    { name: "Saloni Janorkar", title: "Hospitality", img: "/board/hosp/saloni.jpg" },
+    { name: "Tarana Nagarajan", title: "Hospitality", img: "/board/hosp/tarana.jpg" },
   ];
 
   // Marketing
   const marketing: Driver[] = [
     { name: "Khushi Aggarwal", title: "Marketing", img: "/board/marketing/khushia.jpg" },
     { name: "Sai Manchikanti", title: "Marketing", img: "/board/marketing/saij.jpg" },
-    { name: "Giana Abraham",   title: "Marketing", img: "/board/marketing/giana.jpg" },
+    { name: "Giana Abraham", title: "Marketing", img: "/board/marketing/giana.jpg" },
   ];
 
   // Graphics
   const graphics: Driver[] = [
-    { name: "Pranav Cherala",   title: "Graphics", img: "/board/graphics/pranav.jpg" },
-    { name: "Shreya Sil",       title: "Graphics", img: "/board/graphics/shreyas.jpg" },
-    { name: "Drshika Chenna",   title: "Graphics", img: "/board/graphics/drshika.jpg" },
+    { name: "Pranav Cherala", title: "Graphics", img: "/board/graphics/pranav.jpg" },
+    { name: "Shreya Sil", title: "Graphics", img: "/board/graphics/shreyas.jpg" },
+    { name: "Drshika Chenna", title: "Graphics", img: "/board/graphics/drshika.jpg" },
   ];
-
-  // Gallery sources
-  const stageImages = Array.from({ length: 19 }, (_, i) => `/stage/Stage${i + 1}.JPG`);
-
-  // Collage pattern
-  const collageClasses: string[] = [
-    "col-span-2 sm:col-span-6 lg:col-span-8 [grid-row:span_28]",
-    "col-span-2 sm:col-span-6 lg:col-span-4 [grid-row:span_28]",
-    "col-span-1 sm:col-span-3 lg:col-span-4 [grid-row:span_18]",
-    "col-span-1 sm:col-span-3 lg:col-span-4 [grid-row:span_18]",
-    "col-span-2 sm:col-span-6 lg:col-span-4 [grid-row:span_18]",
-    "col-span-2 sm:col-span-6 lg:col-span-12 [grid-row:span_16]",
-    "col-span-1 sm:col-span-3 lg:col-span-6 [grid-row:span_20]",
-    "col-span-1 sm:col-span-3 lg:col-span-6 [grid-row:span_20]",
-    "col-span-1 sm:col-span-3 lg:col-span-4 [grid-row:span_18]",
-    "col-span-1 sm:col-span-3 lg:col-span-4 [grid-row:span_18]",
-    "col-span-1 sm:col-span-3 lg:col-span-4 [grid-row:span_18]",
-    "col-span-2 sm:col-span-6 lg:col-span-8 [grid-row:span_22]",
-    "col-span-2 sm:col-span-6 lg:col-span-4 [grid-row:span_22]",
-    "col-span-1 sm:col-span-3 lg:col-span-4 [grid-row:span_18]",
-    "col-span-1 sm:col-span-3 lg:col-span-8 [grid-row:span_18]",
-    "col-span-1 sm:col-span-3 lg:col-span-6 [grid-row:span_20]",
-    "col-span-1 sm:col-span-3 lg:col-span-6 [grid-row:span_20]",
-    "col-span-1 sm:col-span-3 lg:col-span-4 [grid-row:span_18]",
-    "col-span-1 sm:col-span-3 lg:col-span-8 [grid-row:span_18]",
-  ].slice(0, stageImages.length);
 
   return (
     <main
@@ -527,38 +615,36 @@ export default function Page() {
       )}
       style={{
         background:
-          "radial-gradient(1400px 860px at 12% -4%, rgba(225,6,0,0.30), transparent 68%)," +
-          "radial-gradient(1400px 820px at 92% 6%, rgba(0,224,255,0.28), transparent 68%)," +
-          "radial-gradient(1200px 780px at 20% 85%, rgba(225,6,0,0.12), transparent 62%)," +
-          "radial-gradient(1200px 780px at 85% 88%, rgba(0,224,255,0.12), transparent 62%)," +
-          "#0F1E33",
+          "radial-gradient(1200px 800px at 85% 10%, rgba(225,6,0,0.25), transparent 55%)," +
+          "radial-gradient(1200px 800px at 15% 85%, rgba(0,224,255,0.25), transparent 55%)," +
+          "#0a101a",
       }}
     >
       <SpeedLines />
       <TrackParallax />
 
       {/* NAV + HUD */}
-      <header className="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-black/25 border-b border-white/10">
+      <header className="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-black/30 border-b border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative h-9 w-9 rounded-full ring-1 ring-white/40 overflow-hidden shadow-[0_0_18px_rgba(0,224,255,0.45)]">
+            <div className="relative h-9 w-9 rounded-full ring-1 ring-white/30 overflow-hidden">
               <Image src="/awz-logo.png" alt="Awaazein" fill sizes="36px" className="object-cover" />
             </div>
             <span className="font-bold tracking-wider">Awaazein 2026</span>
           </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm text-white/90">
+          <nav className="hidden md:flex items-center gap-6 text-sm text-white/85">
             <a href="#home" className="hover:text-white">Home</a>
             <a href="#about" className="hover:text-white">About</a>
             <a href="#venue" className="hover:text-white">Venue</a>
             <a href="#lineup" className="hover:text-white">Line Up</a>
-            <a href="#volunteer" className="hover:text-white">Volunteer Info</a>
-            <a href="#sponsorship" className="hover:text-white">Sponsorship</a>
-            <a href="#gallery" className="hover:text-white">Photo Gallery</a>
+            <a href="#volunteer" className="hover:text-white">Volunteer</a>
             <a href="#board" className="hover:text-white">Board</a>
-            <a href="#contact" className="hover:text-white">Contact Us</a>
+            <a href="#sponsorship" className="hover:text-white">Sponsorship</a>
+            <a href="#gallery" className="hover:text-white">Gallery</a>
+            <a href="#contact" className="hover:text-white">Contact</a>
             <Button
               onClick={() => setTicketsOpen(true)}
-              className="ml-2 bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_24px_rgba(225,6,0,0.55)]"
+              className="ml-2 bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_20px_rgba(225,6,0,0.45)]"
             >
               Tickets
             </Button>
@@ -568,10 +654,10 @@ export default function Page() {
         {/* HUD countdown bar */}
         <div className="sticky top-14 z-20">
           <div className="mx-auto max-w-6xl px-6 pb-2">
-            <div className="rounded-xl bg-black/45 border border-white/15 backdrop-blur grid grid-flow-col auto-cols-max gap-4 px-4 py-2">
+            <div className="rounded-xl bg-black/55 border border-white/15 backdrop-blur grid grid-flow-col auto-cols-max gap-4 px-4 py-2">
               {["Days", "Hours", "Minutes", "Seconds"].map((lbl, idx) => (
                 <div key={lbl} className="flex items-baseline gap-2">
-                  <span className="text-xs uppercase text-white/70 tracking-widest">{lbl}</span>
+                  <span className="text-xs uppercase text-white/60 tracking-widest">{lbl}</span>
                   <span className="font-mono text-lg" suppressHydrationWarning>
                     {hydrated ? [d, h, m, s][idx].toString().padStart(2, "0") : "--"}
                   </span>
@@ -593,18 +679,18 @@ export default function Page() {
               className="text-4xl md:text-6xl font-extrabold leading-tight"
             >
               <span className="[font-family:var(--font-orbitron)] tracking-wide normal-case">Awaazein</span>{" "}
-              <span className="text-[#00E0FF] drop-shadow-[0_0_24px_rgba(0,224,255,0.7)]">F1 Edition</span>
+              <span className="text-[#00E0FF] drop-shadow-[0_0_18px_rgba(0,224,255,0.55)]">F1 Edition</span>
             </motion.h1>
 
-            <p className="mt-4 max-w-prose text-white/95">
-              South Asian a-capella like you&rsquo;ve never seen it &mdash; speed, precision, and harmony.
+            <p className="mt-4 max-w-prose text-white/90">
+              South Asian a-capella like you’ve never seen it — speed, precision, and harmony.
               Join us for a night where voices race to victory.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Button
                 onClick={() => setTicketsOpen(true)}
-                className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_30px_rgba(225,6,0,0.6)]"
+                className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_24px_rgba(225,6,0,0.5)]"
               >
                 Tickets — Coming Soon
               </Button>
@@ -619,8 +705,8 @@ export default function Page() {
           </div>
 
           {/* Circular logo */}
-          <div className="relative rounded-2xl border border-white/20 bg-black/30 p-6 md:p-8">
-            <div className="relative h-80 w-80 md:h-[26rem] md:w-[26rem] rounded-full overflow-hidden ring-2 ring-white/25 shadow-[0_0_100px_rgba(0,224,255,0.45)] mx-auto">
+          <div className="relative rounded-2xl border border-white/20 bg-black/40 p-6 md:p-8">
+            <div className="relative h-80 w-80 md:h-[26rem] md:w-[26rem] rounded-full overflow-hidden ring-2 ring-white/25 shadow-[0_0_90px_rgba(0,224,255,0.35)] mx-auto">
               <Image src="/awz-logo.png" alt="Awaazein Logo" fill className="object-contain bg-transparent" priority />
             </div>
           </div>
@@ -642,7 +728,7 @@ export default function Page() {
             className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.02]"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/15 pointer-events-none" />
         </div>
       </section>
 
@@ -652,12 +738,12 @@ export default function Page() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             {/* Text */}
             <div className="order-2 md:order-1">
-              <p className="text-white/95 text-lg md:text-xl leading-relaxed md:leading-8">
+              <p className="text-white/90 text-lg md:text-xl leading-relaxed md:leading-8">
                 Awaazein is DFW&rsquo;s premier South Asian a-capella competition. Translating to
-                &ldquo;The Voices&rdquo; in Hindi, Awaazein is a bid competition under the Association of
-                South Asian A-Capella (ASA). Teams from across the nation participate in Awaazein,
+                “The Voices” in Hindi, Awaazein is a bid competition under the Association of
+                South Asian A-Capella (ASA). Teams from all over the nation participate in Awaazein
                 hoping for a chance to win the coveted award and advance to the prestigious national
-                competition: All American Awaaz.
+                competition: All American Awaaz. Check out their website for more information.
               </p>
 
               <div className="mt-4 flex flex-wrap gap-3">
@@ -704,7 +790,11 @@ export default function Page() {
 
         <div className="mb-6">
           <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10">
-            <a href="https://maps.google.com/?q=Irving+Arts+Center" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://maps.google.com/?q=Irving+Arts+Center"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Open in Google Maps
             </a>
           </Button>
@@ -771,14 +861,14 @@ export default function Page() {
         <FadeIn>
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="order-2 md:order-1">
-              <div className="text-white text-3xl md:text-5xl font-extrabold [text-shadow:_0_0_34px_rgba(0,224,255,0.45)]">
+              <div className="text-white text-3xl md:text-5xl font-extrabold [text-shadow:_0_0_28px_rgba(0,224,255,0.35)]">
                 Coming Soon — Winter 2025
               </div>
             </div>
 
             <div className="order-1 md:order-2 md:-mt-20 lg:-mt-28 xl:-mt-36">
               <div
-                className="group relative w-full aspect-[4/3] md:aspect-[16/10] rounded-3xl overflow-hidden ring-1 ring-white/15 cursor-zoom-in shadow-[0_0_46px_rgba(0,224,255,0.25)]"
+                className="group relative w-full aspect-[4/3] md:aspect-[16/10] rounded-3xl overflow-hidden ring-1 ring-white/15 cursor-zoom-in shadow-[0_0_40px_rgba(0,224,255,0.15)]"
                 onClick={() => openLightbox("/f1.jpg", "F1 car inspiration for lineup reveal")}
               >
                 <Image
@@ -802,21 +892,25 @@ export default function Page() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             {/* Text */}
             <div className="order-2 md:order-1">
-              <p className="text-white/95 text-lg md:text-xl leading-relaxed md:leading-8">
+              <p className="text-white/90 text-lg md:text-xl leading-relaxed md:leading-8">
                 Be a part of our Awaazein Family and see the behind-the-scenes of our competition!
                 Volunteers help with the major parts of the weekend and are the backbone of Awaazein.
                 This is the perfect way to get involved with the circuit without a heavy time commitment.
-                Click the link below to submit an application&mdash;we look forward to working with you!
+                Click the link below to submit an application, we look forward to working with you!
               </p>
 
-              <p className="mt-3 text-white/80 italic">— Awaazein Executive Board</p>
+              <p className="mt-3 text-white/75 italic">— Awaazein Executive Board</p>
 
               <div className="mt-5">
                 <Button
                   asChild
-                  className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_28px_rgba(225,6,0,0.55)]"
+                  className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_22px_rgba(225,6,0,0.45)]"
                 >
-                  <a href="https://forms.gle/Wzbsfnw4m7oLzJiQ6" target="_blank" rel="noopener noreferrer">
+                  <a
+                    href="https://forms.gle/Wzbsfnw4m7oLzJiQ6"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Apply to Volunteer
                   </a>
                 </Button>
@@ -827,7 +921,9 @@ export default function Page() {
             <div className="order-1 md:order-2 md:-mt-10 lg:-mt-16">
               <div
                 className="group relative w-full aspect-[16/9] rounded-3xl overflow-hidden ring-1 ring-white/15 cursor-zoom-in"
-                onClick={() => openLightbox("/Volunteer.JPG", "Awaazein volunteers and liaisons at the venue")}
+                onClick={() =>
+                  openLightbox("/Volunteer.JPG", "Awaazein volunteers and liaisons at the venue")
+                }
               >
                 <Image
                   src="/Volunteer.JPG"
@@ -844,59 +940,7 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-      {/* SPONSORSHIP & DONATIONS */}
-      <Section id="sponsorship" title="Sponsorship & Donations">
-        <FadeIn>
-          <div className="grid md:grid-cols-2 gap-6 lg:gap-10 items-start">
-            {/* Sponsorship */}
-            <div className={cx("rounded-2xl p-6 md:p-7", theme.ring, theme.panel)}>
-              <h3 className="text-xl md:text-2xl font-extrabold mb-3">Sponsor Awaazein</h3>
-              <p className="text-white/95">
-                Interested in supporting our show and promoting your brand? Awaazein brings together a
-                diverse audience from across the nation&mdash;an ideal place to advertise your business.
-                Click below to view our sponsorship packet for more information. If you&rsquo;re interested,
-                please email <a className="underline" href="mailto:awaazeinexec@gmail.com">awaazeinexec@gmail.com</a>.
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Button asChild className="bg-[#E10600] hover:bg-[#c70500]">
-                  <a href="/SPONSORSHIP%20PACKET%202026.pdf" target="_blank" rel="noreferrer">
-                    View Sponsorship Packet (PDF)
-                  </a>
-                </Button>
-                <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10">
-                  <a href="mailto:awaazeinexec@gmail.com?subject=Sponsorship%20Inquiry">Email Us</a>
-                </Button>
-              </div>
-            </div>
-
-            {/* Donations */}
-            <div className={cx("rounded-2xl p-6 md:p-7", theme.ring, theme.panel)}>
-              <h3 className="text-xl md:text-2xl font-extrabold mb-3">Make a Donation</h3>
-              <p className="text-white/95">
-                Interested in making a donation? Awaazein&rsquo;s success comes from the support of its strong
-                community. All monetary donations go toward boosting hospitality and the overall
-                experience for competing teams. Our executive board thanks you in advance for your support!
-              </p>
-
-              <div className="mt-5">
-                <Button
-                  asChild
-                  className="bg-[#00E0FF] hover:bg-[#01b8d1] text-black font-semibold shadow-[0_0_24px_rgba(0,224,255,0.5)]"
-                >
-                  <a href="https://gofund.me/1bbb82734" target="_blank" rel="noreferrer">
-                    Donate on GoFundMe
-                  </a>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </FadeIn>
-
-        <CheckeredDivider />
-      </Section>
-
-      {/* BOARD — BEFORE Gallery */}
+      {/* BOARD (moved before Gallery) */}
       <Section id="board" title="Meet Our Amazing Board Members">
         {/* Directors */}
         <div className="mb-4">
@@ -1057,47 +1101,77 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-      {/* GALLERY — AFTER Board */}
-      <Section id="gallery" title="Previous Show Gallery">
+      {/* SPONSORSHIP & DONATIONS */}
+      <Section id="sponsorship" title="Sponsorship & Donations">
         <FadeIn>
-          <div
-            className="grid grid-cols-2 sm:grid-cols-6 lg:grid-cols-12 gap-2 md:gap-3"
-            style={{ gridAutoRows: "8px" }}
-          >
-            {stageImages.map((src, i) => (
-              <CollageItem
-                key={src}
-                src={src}
-                alt={`Previous show photo ${i + 1}`}
-                cls={collageClasses[i % collageClasses.length]}
-                onOpen={openLightbox}
-              />
-            ))}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Left: Sponsorship packet */}
+            <div className="rounded-2xl border border-white/15 bg-white/10 p-6">
+              <h3 className="text-xl font-bold mb-2">Partner With Awaazein</h3>
+              <p className="text-white/90">
+                Interested in supporting our show and promoting your brand? Awaazein gathers an audience
+                of diverse individuals from all over the nation — a perfect place to advertise your business.
+                Click below to view our sponsorship packet for more information. If interested, please email
+                <span className="mx-1 font-semibold">awaazeinexec@gmail.com</span>.
+              </p>
+              <div className="mt-4 flex gap-3">
+                <Button asChild className="bg-[#00E0FF] hover:bg-[#00c5e0] text-black font-semibold">
+                  <a
+                    href="/SPONSORSHIP%20PACKET%202026.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View Sponsorship Packet (PDF)
+                  </a>
+                </Button>
+              </div>
+            </div>
+
+            {/* Right: Donations */}
+            <div className="rounded-2xl border border-white/15 bg-white/10 p-6">
+              <h3 className="text-xl font-bold mb-2">Make a Donation</h3>
+              <p className="text-white/90">
+                Interested in making a donation? Awaazein&rsquo;s success comes from the support of its strong community.
+                All monetary donations go toward boosting hospitality and the overall experience for teams. Our executive
+                board thanks you in advance for your generosity!
+              </p>
+              <div className="mt-4">
+                <Button asChild className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_22px_rgba(225,6,0,0.45)]">
+                  <a
+                    href="https://gofund.me/1bbb82734"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Donate on GoFundMe
+                  </a>
+                </Button>
+              </div>
+            </div>
           </div>
         </FadeIn>
 
         <CheckeredDivider />
       </Section>
 
-      {/* CONTACT */}
+      {/* GALLERY */}
+      <Section id="gallery" title="Previous Show Gallery">
+        <FadeIn>
+          <PuzzleGallery onOpen={openLightbox} />
+        </FadeIn>
+
+        <CheckeredDivider />
+      </Section>
+
+      {/* CONTACT (Form) */}
       <Section id="contact" title="Contact Us">
         <FadeIn>
-          <div className={cx("rounded-2xl p-8 border", theme.ring, theme.panel)}>
-            <p className="text-white/95 mb-6">
-              For inquiries, sponsorships, or volunteering, reach out and we&rsquo;ll get back quickly.
-            </p>
-            <Button asChild className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_30px_rgba(225,6,0,0.6)]">
-              <a href="mailto:awaazeinexec@gmail.com" className="inline-flex items-center gap-2">
-                <Mail size={18} /> Email Us
-              </a>
-            </Button>
-          </div>
+          <ContactForm />
         </FadeIn>
       </Section>
 
       {/* FOOTER */}
       <footer className="border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-white/80 text-sm">
+        <div className="mx-auto max-w-6xl px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-white/70 text-sm">
           <div className="flex items-center gap-3">
             <Image src="/awz-logo.png" alt="Awaazein" width={28} height={28} className="rounded-full" />
             <span>Awaazein 2026 • All rights reserved</span>
@@ -1107,10 +1181,10 @@ export default function Page() {
             <a href="#about" className="hover:text-white">About</a>
             <a href="#venue" className="hover:text-white">Venue</a>
             <a href="#lineup" className="hover:text-white">Line Up</a>
-            <a href="#volunteer" className="hover:text-white">Volunteer Info</a>
-            <a href="#sponsorship" className="hover:text-white">Sponsorship</a>
-            <a href="#gallery" className="hover:text-white">Photo Gallery</a>
+            <a href="#volunteer" className="hover:text-white">Volunteer</a>
             <a href="#board" className="hover:text-white">Board</a>
+            <a href="#sponsorship" className="hover:text-white">Sponsorship</a>
+            <a href="#gallery" className="hover:text-white">Gallery</a>
             <a href="#contact" className="hover:text-white">Contact</a>
           </div>
         </div>
