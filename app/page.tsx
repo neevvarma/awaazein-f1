@@ -70,36 +70,36 @@ function useCountdown(to: Date) {
   return t;
 }
 
-/* ── Background neon sweeps (amped up red/blue) ── */
+/* ── Background neon sweeps (brighter) ── */
 const SpeedLines: React.FC = () => (
   <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-    {/* Big red/blue radial glows */}
+    {/* Big soft glow pools */}
     <div
       className="absolute -inset-40"
       style={{
         background:
-          // flipped/stronger: more red at top-right, more blue at bottom-left
-          "radial-gradient(1200px 800px at 85% 10%, rgba(225,6,0,0.40), transparent 60%)," +
-          "radial-gradient(1300px 900px at 15% 85%, rgba(0,224,255,0.40), transparent 60%)",
-        filter: "saturate(170%) blur(0.5px)",
+          // invert the previous balance: push more intense red/blue
+          "radial-gradient(1200px 720px at 20% 15%, rgba(0,224,255,0.35), transparent 60%)," +
+          "radial-gradient(1200px 720px at 82% 70%, rgba(225,6,0,0.35), transparent 60%)",
+        filter: "saturate(180%) blur(0.5px)",
       }}
     />
-    {/* Hard neon strokes */}
+    {/* Racing streaks */}
     <div
-      className="absolute -right-1/3 -top-36 h-[155%] w-[90%] rotate-[18deg] opacity-90"
-      style={{ background: "linear-gradient(90deg, transparent, rgba(225,6,0,0.75), transparent)" }}
-    />
-    <div
-      className="absolute -left-1/3 top-1/4 h-[140%] w-[85%] -rotate-[12deg] opacity-90"
+      className="absolute -right-[25%] -top-16 h-[160%] w-[90%] rotate-[18deg] opacity-90"
       style={{ background: "linear-gradient(90deg, transparent, rgba(0,224,255,0.75), transparent)" }}
     />
-    {/* Fine scanning lines */}
     <div
-      className="absolute inset-0 opacity-35"
+      className="absolute -left-[28%] top-1/3 h-[140%] w-[80%] -rotate-[12deg] opacity-90"
+      style={{ background: "linear-gradient(90deg, transparent, rgba(225,6,0,0.75), transparent)" }}
+    />
+    {/* Subtle cross-glow */}
+    <div
+      className="absolute inset-0 opacity-50"
       style={{
         background:
-          "repeating-linear-gradient(180deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 3px)",
-        mixBlendMode: "screen",
+          "conic-gradient(from 120deg at 30% 20%, rgba(0,224,255,0.25), transparent 30%)," +
+          "conic-gradient(from -60deg at 70% 80%, rgba(225,6,0,0.25), transparent 30%)",
       }}
     />
   </div>
@@ -109,7 +109,7 @@ const SpeedLines: React.FC = () => (
 const TrackParallax: React.FC = () => {
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, -220]);
-  const opacity = useTransform(scrollYProgress, [0, 0.6, 1], [0.35, 0.15, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 0.6, 1], [0.5, 0.25, 0]);
 
   return (
     <motion.svg
@@ -120,8 +120,8 @@ const TrackParallax: React.FC = () => {
     >
       <defs>
         <linearGradient id="trackGrad" x1="0" x2="1">
-          <stop offset="0%" stopColor="#00E0FF" stopOpacity="0.85" />
-          <stop offset="100%" stopColor="#E10600" stopOpacity="0.85" />
+          <stop offset="0%" stopColor="#00E0FF" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#E10600" stopOpacity="0.9" />
         </linearGradient>
       </defs>
       <path
@@ -131,7 +131,7 @@ const TrackParallax: React.FC = () => {
         strokeWidth="10"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.6"
+        opacity="0.7"
       />
       <path
         d="M120,620 C300,570 450,560 620,590 C780,615 950,660 1100,640"
@@ -140,7 +140,7 @@ const TrackParallax: React.FC = () => {
         strokeWidth="6"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.35"
+        opacity="0.5"
       />
     </motion.svg>
   );
@@ -249,140 +249,7 @@ const Lightbox: React.FC<{ src: string | null; alt: string; onClose: () => void 
   );
 };
 
-/* ── Contact Form ── */
-const ContactForm: React.FC = () => {
-  const [name, setName] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [subject, setSubject] = React.useState("");
-  const [message, setMessage] = React.useState("");
-  const [token, setToken] = React.useState(""); // honeypot
-  const [status, setStatus] = React.useState<"idle" | "sending" | "success" | "error">("idle");
-  const [error, setError] = React.useState<string | null>(null);
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setStatus("sending");
-    setError(null);
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, subject, message, token }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        setStatus("error");
-        setError(json.error || "Something went wrong.");
-        return;
-      }
-      setStatus("success");
-      setName("");
-      setEmail("");
-      setSubject("");
-      setMessage("");
-    } catch {
-      setStatus("error");
-      setError("Network error. Please try again.");
-    }
-  }
-
-  return (
-    <div className="rounded-2xl p-8 border ring-1 ring-white/15 bg-white/10">
-      <p className="text-white/90 mb-6">
-        Have a question or want to get in touch with the Awaazein team? Send us a message here and we will respond by email.
-      </p>
-
-      <form onSubmit={onSubmit} className="grid gap-4">
-        {/* Honeypot (hidden) */}
-        <input
-          type="text"
-          name="company"
-          autoComplete="off"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          className="hidden"
-          tabIndex={-1}
-        />
-
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm text-white/80 mb-1">Name</label>
-            <input
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-              placeholder="Your name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-white/80 mb-1">Email</label>
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-              placeholder="you@example.com"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm text-white/80 mb-1">Subject (optional)</label>
-          <input
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            className="w-full rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-            placeholder="Subject"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-white/80 mb-1">Message</label>
-          <textarea
-            required
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={6}
-            className="w-full rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-            placeholder="Type your message..."
-          />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            type="submit"
-            disabled={status === "sending"}
-            className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_22px_rgba(225,6,0,0.45)]"
-          >
-            {status === "sending" ? "Sending..." : "Send Message"}
-          </Button>
-
-          <a
-            href="mailto:awaazeinexec@gmail.com"
-            className="text-white/80 underline hover:text-white text-sm"
-          >
-            Or email us directly
-          </a>
-        </div>
-
-        {status === "success" && (
-          <div className="mt-3 text-sm text-green-300" role="status" aria-live="polite">
-            Thanks! Your message was sent.
-          </div>
-        )}
-        {status === "error" && (
-          <div className="mt-3 text-sm text-red-300" role="alert">
-            {error}
-          </div>
-        )}
-      </form>
-    </div>
-  );
-};
-
-/* ── F1 Driver Card (labels BELOW the image) ── */
+/* ── F1 Driver Card ── */
 type Driver = { name: string; title: string; img: string };
 
 const DriverCard: React.FC<{
@@ -416,6 +283,7 @@ const DriverCard: React.FC<{
           fill
           className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
           sizes="(min-width: 768px) 360px, 100vw"
+          quality={95}
         />
       </div>
 
@@ -435,80 +303,101 @@ const DriverCard: React.FC<{
   );
 };
 
-/* ── Gallery (Puzzle/Tessellated) ── */
-const stageImages = Array.from({ length: 19 }, (_, i) => `/stage/Stage${i + 1}.JPG`);
+/* ── Contact Form ── */
+function ContactForm() {
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [subject, setSubject] = React.useState("");
+  const [message, setMessage] = React.useState("");
+  const [sending, setSending] = React.useState(false);
+  const [ok, setOk] = React.useState<boolean | null>(null);
+  const [err, setErr] = React.useState<string>("");
 
-// Predefined layout pattern for a puzzle feel (12-col grid on lg, 6 on sm)
-const puzzlePattern: Array<{ sm: string; lg: string; aspect: string }> = [
-  { sm: "sm:col-span-3", lg: "lg:col-span-4", aspect: "aspect-[16/10]" },
-  { sm: "sm:col-span-3", lg: "lg:col-span-3", aspect: "aspect-[1/1]" },
-  { sm: "sm:col-span-3", lg: "lg:col-span-5", aspect: "aspect-[21/10]" },
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSending(true);
+    setOk(null);
+    setErr("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, subject, message }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || "Failed to send.");
+      }
+      setOk(true);
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+    } catch (er: unknown) {
+      setOk(false);
+      const msg = er instanceof Error ? er.message : "Failed to send.";
+      setErr(msg);
+    } finally {
+      setSending(false);
+    }
+  }
 
-  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[3/4]" },
-  { sm: "sm:col-span-4", lg: "lg:col-span-6", aspect: "aspect-[16/9]" },
-  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[4/5]" },
-
-  { sm: "sm:col-span-3", lg: "lg:col-span-4", aspect: "aspect-[4/3]" },
-  { sm: "sm:col-span-3", lg: "lg:col-span-4", aspect: "aspect-[4/5]" },
-  { sm: "sm:col-span-3", lg: "lg:col-span-4", aspect: "aspect-[16/9]" },
-
-  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[5/4]" },
-  { sm: "sm:col-span-4", lg: "lg:col-span-6", aspect: "aspect-[18/9]" },
-  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[3/4]" },
-
-  { sm: "sm:col-span-3", lg: "lg:col-span-5", aspect: "aspect-[21/10]" },
-  { sm: "sm:col-span-3", lg: "lg:col-span-3", aspect: "aspect-[1/1]" },
-  { sm: "sm:col-span-3", lg: "lg:col-span-4", aspect: "aspect-[4/3]" },
-
-  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[5/6]" },
-  { sm: "sm:col-span-4", lg: "lg:col-span-6", aspect: "aspect-[16/9]" },
-  { sm: "sm:col-span-2", lg: "lg:col-span-3", aspect: "aspect-[3/4]" },
-
-  { sm: "sm:col-span-6", lg: "lg:col-span-12", aspect: "aspect-[32/9]" },
-];
-
-const PuzzleGallery: React.FC<{ onOpen: (src: string, alt: string) => void }> = ({ onOpen }) => {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-6 lg:grid-cols-12 gap-3 md:gap-4">
-      {stageImages.map((src, i) => {
-        const layout = puzzlePattern[i % puzzlePattern.length];
-        return (
-          <div
-            key={src}
-            className={cx(
-              "relative overflow-hidden rounded-2xl ring-1 ring-white/15 cursor-zoom-in group",
-              "bg-black/30",
-              layout.sm,
-              layout.lg,
-              layout.aspect
-            )}
-            onClick={() => onOpen(src, `Stage photo ${i + 1}`)}
-          >
-            <Image
-              src={src}
-              alt={`Stage photo ${i + 1}`}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              sizes="(min-width: 1024px) 25vw, (min-width:640px) 33vw, 50vw"
-            />
-            {/* subtle gradient and neon border on hover */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 pointer-events-none" />
-            <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-transparent group-hover:ring-[#00E0FF]/40 group-hover:shadow-[0_0_40px_rgba(0,224,255,0.25)] transition-all" />
-          </div>
-        );
-      })}
-    </div>
+    <form onSubmit={onSubmit} className="grid gap-4">
+      <div className="grid md:grid-cols-2 gap-4">
+        <input
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your name"
+          className="w-full rounded-md bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
+        />
+        <input
+          required
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Your email"
+          className="w-full rounded-md bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
+        />
+      </div>
+      <input
+        required
+        value={subject}
+        onChange={(e) => setSubject(e.target.value)}
+        placeholder="Subject"
+        className="w-full rounded-md bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
+      />
+      <textarea
+        required
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Your message"
+        className="min-h-[140px] w-full rounded-md bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
+      />
+      <div className="flex items-center gap-3">
+        <Button
+          type="submit"
+          disabled={sending}
+          className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_25px_rgba(225,6,0,0.45)]"
+        >
+          {sending ? "Sending…" : "Send Message"}
+        </Button>
+        {ok === true && <span className="text-green-400">Sent! We’ll get back to you soon.</span>}
+        {ok === false && <span className="text-red-400">Error: {err || "Please try again."}</span>}
+      </div>
+      <p className="text-white/70 text-sm">
+        Messages are delivered to <span className="font-semibold">awaazeinexec@gmail.com</span>.
+      </p>
+    </form>
   );
-};
+}
 
 /* ── Page ── */
 export default function Page() {
   const { d, h, m, s } = useCountdown(EVENT_DATE);
-  const [hydrated, setHydrated] = React.useState(false);
-  React.useEffect(() => setHydrated(true), []);
 
   const [ticketsOpen, setTicketsOpen] = React.useState(false);
-
   const [lightboxSrc, setLightboxSrc] = React.useState<string | null>(null);
   const [lightboxAlt, setLightboxAlt] = React.useState<string>("");
 
@@ -605,6 +494,31 @@ export default function Page() {
     { name: "Drshika Chenna", title: "Graphics", img: "/board/graphics/drshika.jpg" },
   ];
 
+  // GALLERY (Stage1..Stage19)
+  const stageImgs = Array.from({ length: 19 }, (_, i) => `/stage/Stage${i + 1}.JPG`);
+  // Puzzle spans (repeat pattern across 19)
+  const spans = [
+    { c: 2, r: 2 },
+    { c: 1, r: 1 },
+    { c: 3, r: 2 },
+    { c: 2, r: 1 },
+    { c: 1, r: 2 },
+    { c: 2, r: 2 },
+    { c: 3, r: 2 },
+    { c: 2, r: 1 },
+    { c: 1, r: 1 },
+    { c: 2, r: 2 },
+    { c: 1, r: 2 },
+    { c: 2, r: 1 },
+    { c: 3, r: 2 },
+    { c: 2, r: 2 },
+    { c: 1, r: 1 },
+    { c: 2, r: 1 },
+    { c: 3, r: 2 },
+    { c: 1, r: 2 },
+    { c: 2, r: 2 },
+  ];
+
   return (
     <main
       id="home"
@@ -615,9 +529,9 @@ export default function Page() {
       )}
       style={{
         background:
-          "radial-gradient(1200px 800px at 85% 10%, rgba(225,6,0,0.25), transparent 55%)," +
-          "radial-gradient(1200px 800px at 15% 85%, rgba(0,224,255,0.25), transparent 55%)," +
-          "#0a101a",
+          "radial-gradient(1200px 800px at 15% 10%, rgba(0,224,255,0.22), transparent 55%)," +
+          "radial-gradient(1200px 800px at 85% 75%, rgba(225,6,0,0.22), transparent 55%)," +
+          "#090f1a",
       }}
     >
       <SpeedLines />
@@ -637,7 +551,7 @@ export default function Page() {
             <a href="#about" className="hover:text-white">About</a>
             <a href="#venue" className="hover:text-white">Venue</a>
             <a href="#lineup" className="hover:text-white">Line Up</a>
-            <a href="#volunteer" className="hover:text-white">Volunteer</a>
+            <a href="#volunteer" className="hover:text-white">Volunteer Info</a>
             <a href="#board" className="hover:text-white">Board</a>
             <a href="#sponsorship" className="hover:text-white">Sponsorship</a>
             <a href="#gallery" className="hover:text-white">Gallery</a>
@@ -651,16 +565,19 @@ export default function Page() {
           </nav>
         </div>
 
-        {/* HUD countdown bar */}
+        {/* HUD countdown bar — mobile friendly */}
         <div className="sticky top-14 z-20">
           <div className="mx-auto max-w-6xl px-6 pb-2">
-            <div className="rounded-xl bg-black/55 border border-white/15 backdrop-blur grid grid-flow-col auto-cols-max gap-4 px-4 py-2">
-              {["Days", "Hours", "Minutes", "Seconds"].map((lbl, idx) => (
+            <div className="rounded-xl bg-black/55 border border-white/15 backdrop-blur grid grid-cols-2 sm:grid-cols-4 gap-3 px-4 py-2">
+              {[
+                { lbl: "Days", val: d },
+                { lbl: "Hours", val: h },
+                { lbl: "Minutes", val: m },
+                { lbl: "Seconds", val: s },
+              ].map(({ lbl, val }) => (
                 <div key={lbl} className="flex items-baseline gap-2">
                   <span className="text-xs uppercase text-white/60 tracking-widest">{lbl}</span>
-                  <span className="font-mono text-lg" suppressHydrationWarning>
-                    {hydrated ? [d, h, m, s][idx].toString().padStart(2, "0") : "--"}
-                  </span>
+                  <span className="font-mono text-lg">{val.toString().padStart(2, "0")}</span>
                 </div>
               ))}
             </div>
@@ -739,11 +656,11 @@ export default function Page() {
             {/* Text */}
             <div className="order-2 md:order-1">
               <p className="text-white/90 text-lg md:text-xl leading-relaxed md:leading-8">
-                Awaazein is DFW&rsquo;s premier South Asian a-capella competition. Translating to
+                Awaazein is DFW’s premier South Asian a-capella competition. Translating to
                 “The Voices” in Hindi, Awaazein is a bid competition under the Association of
-                South Asian A-Capella (ASA). Teams from all over the nation participate in Awaazein
-                hoping for a chance to win the coveted award and advance to the prestigious national
-                competition: All American Awaaz. Check out their website for more information.
+                South Asian A-Capella (ASA). Teams from across the nation compete at Awaazein
+                for a chance to take home the trophy and advance to the prestigious
+                national showcase: All American Awaaz.
               </p>
 
               <div className="mt-4 flex flex-wrap gap-3">
@@ -894,9 +811,9 @@ export default function Page() {
             <div className="order-2 md:order-1">
               <p className="text-white/90 text-lg md:text-xl leading-relaxed md:leading-8">
                 Be a part of our Awaazein Family and see the behind-the-scenes of our competition!
-                Volunteers help with the major parts of the weekend and are the backbone of Awaazein.
-                This is the perfect way to get involved with the circuit without a heavy time commitment.
-                Click the link below to submit an application, we look forward to working with you!
+                Volunteers support all major parts of the weekend and are the backbone of Awaazein.
+                It’s the perfect way to get involved with the circuit without a heavy time commitment.
+                Click the link below to apply—we look forward to working with you!
               </p>
 
               <p className="mt-3 text-white/75 italic">— Awaazein Executive Board</p>
@@ -940,7 +857,7 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-      {/* BOARD (moved before Gallery) */}
+      {/* BOARD — moved before Gallery per request */}
       <Section id="board" title="Meet Our Amazing Board Members">
         {/* Directors */}
         <div className="mb-4">
@@ -1101,48 +1018,46 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-      {/* SPONSORSHIP & DONATIONS */}
-      <Section id="sponsorship" title="Sponsorship & Donations">
+      {/* SPONSORSHIP (two-column split) */}
+      <Section id="sponsorship" title="Sponsorship">
         <FadeIn>
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Left: Sponsorship packet */}
-            <div className="rounded-2xl border border-white/15 bg-white/10 p-6">
-              <h3 className="text-xl font-bold mb-2">Partner With Awaazein</h3>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className={cx("rounded-2xl p-6 border", theme.ring, theme.panel)}>
+              <h3 className="text-xl font-bold mb-3">Partner with Awaazein</h3>
               <p className="text-white/90">
-                Interested in supporting our show and promoting your brand? Awaazein gathers an audience
-                of diverse individuals from all over the nation — a perfect place to advertise your business.
-                Click below to view our sponsorship packet for more information. If interested, please email
-                <span className="mx-1 font-semibold">awaazeinexec@gmail.com</span>.
+                Interested in supporting our show and promoting your brand? Awaazein gathers a diverse audience from
+                across the nation—the perfect place to advertise your business. Click below to view our sponsorship
+                packet for more information. If interested, please email <span className="font-semibold">awaazeinexec@gmail.com</span>.
               </p>
-              <div className="mt-4 flex gap-3">
-                <Button asChild className="bg-[#00E0FF] hover:bg-[#00c5e0] text-black font-semibold">
-                  <a
-                    href="/SPONSORSHIP%20PACKET%202026.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Button
+                  asChild
+                  className="bg-[#00E0FF] hover:bg-[#0cc9ea] text-black font-semibold shadow-[0_0_22px_rgba(0,224,255,0.4)]"
+                >
+                  <a href="/SPONSORSHIP PACKET 2026.pdf" target="_blank" rel="noopener noreferrer">
                     View Sponsorship Packet (PDF)
                   </a>
+                </Button>
+                <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10">
+                  <a href="mailto:awaazeinexec@gmail.com">Email Us</a>
                 </Button>
               </div>
             </div>
 
-            {/* Right: Donations */}
-            <div className="rounded-2xl border border-white/15 bg-white/10 p-6">
-              <h3 className="text-xl font-bold mb-2">Make a Donation</h3>
+            <div className={cx("rounded-2xl p-6 border", theme.ring, theme.panel)}>
+              <h3 className="text-xl font-bold mb-3">Make a Donation</h3>
               <p className="text-white/90">
-                Interested in making a donation? Awaazein&rsquo;s success comes from the support of its strong community.
-                All monetary donations go toward boosting hospitality and the overall experience for teams. Our executive
-                board thanks you in advance for your generosity!
+                Interested in making a donation? Awaazein’s success comes from the support of its strong community.
+                All monetary donations go toward boosting hospitality and enhancing the overall experience for teams.
+                Our executive board thanks you in advance for your generosity!
               </p>
-              <div className="mt-4">
-                <Button asChild className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_22px_rgba(225,6,0,0.45)]">
-                  <a
-                    href="https://gofund.me/1bbb82734"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Donate on GoFundMe
+              <div className="mt-5">
+                <Button
+                  asChild
+                  className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_22px_rgba(225,6,0,0.45)]"
+                >
+                  <a href="https://gofund.me/1bbb82734" target="_blank" rel="noopener noreferrer">
+                    Donate to Awaazein
                   </a>
                 </Button>
               </div>
@@ -1153,19 +1068,64 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-      {/* GALLERY */}
+      {/* GALLERY — Puzzle collage */}
       <Section id="gallery" title="Previous Show Gallery">
         <FadeIn>
-          <PuzzleGallery onOpen={openLightbox} />
+          <div
+            className="
+              grid gap-3
+              grid-cols-2
+              sm:grid-cols-3
+              md:grid-cols-6
+              auto-rows-[8px] md:auto-rows-[10px]
+            "
+          >
+            {stageImgs.map((src, idx) => {
+              const sp = spans[idx % spans.length];
+              // On mobile, keep spans modest; on md+ use full puzzle spans
+              const mobileSpan = "col-span-1 row-span-[20]";
+              const desktopSpan = `md:col-span-${sp.c} md:row-span-[${sp.r * 20}]`;
+
+              return (
+                <div
+                  key={src}
+                  className={cx(
+                    "relative overflow-hidden rounded-xl ring-1 ring-white/10 group cursor-zoom-in",
+                    mobileSpan,
+                    desktopSpan
+                  )}
+                  onClick={() => openLightbox(src, `Stage photo ${idx + 1}`)}
+                >
+                  {/* Use fill + object-cover; quality up; sizes set to reduce blur */}
+                  <Image
+                    src={src}
+                    alt={`Stage photo ${idx + 1}`}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03] will-change-transform"
+                    sizes="(min-width: 1024px) 20vw, (min-width: 768px) 33vw, 50vw"
+                    quality={95}
+                    priority={idx < 6}
+                  />
+                  {/* Subtle neon stroke on hover */}
+                  <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-transparent group-hover:ring-[#00E0FF]/50 group-hover:shadow-[0_0_25px_rgba(0,224,255,0.25)] transition-all" />
+                </div>
+              );
+            })}
+          </div>
         </FadeIn>
 
         <CheckeredDivider />
       </Section>
 
-      {/* CONTACT (Form) */}
+      {/* CONTACT */}
       <Section id="contact" title="Contact Us">
         <FadeIn>
-          <ContactForm />
+          <div className={cx("rounded-2xl p-8 border", theme.ring, theme.panel)}>
+            <p className="text-white/90 mb-6">
+              Questions about tickets, sponsorships, or volunteering? Send us a message here and we’ll reply via email.
+            </p>
+            <ContactForm />
+          </div>
         </FadeIn>
       </Section>
 
