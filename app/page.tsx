@@ -9,7 +9,8 @@ import { Orbitron } from "next/font/google";
 
 /* ────────────────────────────────────────────────────────────────
    Awaazein F1 — Site
-   Home • About • Venue • Line Up • Volunteer • Board • Sponsorship • Gallery • Contact
+   Home • About • Venue • Line Up • Volunteer • Board • Sponsorship
+   Gallery • Contact
 ──────────────────────────────────────────────────────────────── */
 
 const EVENT_DATE = new Date("2026-02-21T18:00:00-06:00"); // Feb 21, 2026
@@ -111,13 +112,11 @@ const SpeedLines: React.FC = () => (
   </div>
 );
 
-
 /* ── Parallax track lines ── */
 const TrackParallax: React.FC = () => {
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, -220]);
-  const opacity = useTransform(scrollYProgress, [0, 0.6, 1], [0.5, 0.25, 0]);
-
+  const opacity = useTransform(scrollYProgress, [0, 0.6, 1], [0.35, 0.15, 0]);
   return (
     <motion.svg
       style={{ y, opacity }}
@@ -127,27 +126,27 @@ const TrackParallax: React.FC = () => {
     >
       <defs>
         <linearGradient id="trackGrad" x1="0" x2="1">
-          <stop offset="0%" stopColor="#00E0FF" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#E10600" stopOpacity="0.9" />
+          <stop offset="0%" stopColor="#00E0FF" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="#E10600" stopOpacity="0.7" />
         </linearGradient>
       </defs>
       <path
         d="M50,700 C200,650 350,620 500,650 C650,680 800,760 990,710"
         fill="none"
         stroke="url(#trackGrad)"
-        strokeWidth="10"
+        strokeWidth="8"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.7"
+        opacity="0.6"
       />
       <path
         d="M120,620 C300,570 450,560 620,590 C780,615 950,660 1100,640"
         fill="none"
         stroke="url(#trackGrad)"
-        strokeWidth="6"
+        strokeWidth="4"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.5"
+        opacity="0.35"
       />
     </motion.svg>
   );
@@ -290,7 +289,6 @@ const DriverCard: React.FC<{
           fill
           className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
           sizes="(min-width: 768px) 360px, 100vw"
-          quality={95}
         />
       </div>
 
@@ -310,101 +308,14 @@ const DriverCard: React.FC<{
   );
 };
 
-/* ── Contact Form ── */
-function ContactForm() {
-  const [name, setName] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [subject, setSubject] = React.useState("");
-  const [message, setMessage] = React.useState("");
-  const [sending, setSending] = React.useState(false);
-  const [ok, setOk] = React.useState<boolean | null>(null);
-  const [err, setErr] = React.useState<string>("");
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSending(true);
-    setOk(null);
-    setErr("");
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, subject, message }),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || "Failed to send.");
-      }
-      setOk(true);
-      setName("");
-      setEmail("");
-      setSubject("");
-      setMessage("");
-    } catch (er: unknown) {
-      setOk(false);
-      const msg = er instanceof Error ? er.message : "Failed to send.";
-      setErr(msg);
-    } finally {
-      setSending(false);
-    }
-  }
-
-  return (
-    <form onSubmit={onSubmit} className="grid gap-4">
-      <div className="grid md:grid-cols-2 gap-4">
-        <input
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Your name"
-          className="w-full rounded-md bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-        />
-        <input
-          required
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Your email"
-          className="w-full rounded-md bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-        />
-      </div>
-      <input
-        required
-        value={subject}
-        onChange={(e) => setSubject(e.target.value)}
-        placeholder="Subject"
-        className="w-full rounded-md bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-      />
-      <textarea
-        required
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Your message"
-        className="min-h-[140px] w-full rounded-md bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-      />
-      <div className="flex items-center gap-3">
-        <Button
-          type="submit"
-          disabled={sending}
-          className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_25px_rgba(225,6,0,0.45)]"
-        >
-          {sending ? "Sending…" : "Send Message"}
-        </Button>
-        {ok === true && <span className="text-green-400">Sent! We’ll get back to you soon.</span>}
-        {ok === false && <span className="text-red-400">Error: {err || "Please try again."}</span>}
-      </div>
-      <p className="text-white/70 text-sm">
-        Messages are delivered to <span className="font-semibold">awaazeinexec@gmail.com</span>.
-      </p>
-    </form>
-  );
-}
-
 /* ── Page ── */
 export default function Page() {
   const { d, h, m, s } = useCountdown(EVENT_DATE);
+  const [hydrated, setHydrated] = React.useState(false);
+  React.useEffect(() => setHydrated(true), []);
 
   const [ticketsOpen, setTicketsOpen] = React.useState(false);
+
   const [lightboxSrc, setLightboxSrc] = React.useState<string | null>(null);
   const [lightboxAlt, setLightboxAlt] = React.useState<string>("");
 
@@ -501,30 +412,38 @@ export default function Page() {
     { name: "Drshika Chenna", title: "Graphics", img: "/board/graphics/drshika.jpg" },
   ];
 
-  // GALLERY (Stage1..Stage19)
-  const stageImgs = Array.from({ length: 19 }, (_, i) => `/stage/Stage${i + 1}.JPG`);
-  // Puzzle spans (repeat pattern across 19)
-  const spans = [
-    { c: 2, r: 2 },
-    { c: 1, r: 1 },
-    { c: 3, r: 2 },
-    { c: 2, r: 1 },
-    { c: 1, r: 2 },
-    { c: 2, r: 2 },
-    { c: 3, r: 2 },
-    { c: 2, r: 1 },
-    { c: 1, r: 1 },
-    { c: 2, r: 2 },
-    { c: 1, r: 2 },
-    { c: 2, r: 1 },
-    { c: 3, r: 2 },
-    { c: 2, r: 2 },
-    { c: 1, r: 1 },
-    { c: 2, r: 1 },
-    { c: 3, r: 2 },
-    { c: 1, r: 2 },
-    { c: 2, r: 2 },
-  ];
+  // Contact form local state
+  const [sending, setSending] = React.useState(false);
+  const [sent, setSent] = React.useState<"idle" | "ok" | "err">("idle");
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (sending) return;
+    setSending(true);
+    setSent("idle");
+    const fd = new FormData(e.currentTarget);
+    const payload = {
+      name: String(fd.get("name") || ""),
+      email: String(fd.get("email") || ""),
+      subject: String(fd.get("subject") || ""),
+      message: String(fd.get("message") || ""),
+    };
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Bad response");
+      setSent("ok");
+      formRef.current?.reset();
+    } catch {
+      setSent("err");
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <main
@@ -536,9 +455,9 @@ export default function Page() {
       )}
       style={{
         background:
-          "radial-gradient(1200px 800px at 15% 10%, rgba(0,224,255,0.22), transparent 55%)," +
-          "radial-gradient(1200px 800px at 85% 75%, rgba(225,6,0,0.22), transparent 55%)," +
-          "#090f1a",
+          "radial-gradient(1200px 800px at 15% 10%, rgba(0,224,255,0.28), transparent 55%)," +
+          "radial-gradient(1200px 800px at 85% 75%, rgba(225,6,0,0.28), transparent 55%)," +
+          "#070b14",
       }}
     >
       <SpeedLines />
@@ -572,19 +491,16 @@ export default function Page() {
           </nav>
         </div>
 
-        {/* HUD countdown bar — mobile friendly */}
+        {/* HUD countdown bar (mobile-friendly) */}
         <div className="sticky top-14 z-20">
-          <div className="mx-auto max-w-6xl px-6 pb-2">
-            <div className="rounded-xl bg-black/55 border border-white/15 backdrop-blur grid grid-cols-2 sm:grid-cols-4 gap-3 px-4 py-2">
-              {[
-                { lbl: "Days", val: d },
-                { lbl: "Hours", val: h },
-                { lbl: "Minutes", val: m },
-                { lbl: "Seconds", val: s },
-              ].map(({ lbl, val }) => (
-                <div key={lbl} className="flex items-baseline gap-2">
-                  <span className="text-xs uppercase text-white/60 tracking-widest">{lbl}</span>
-                  <span className="font-mono text-lg">{val.toString().padStart(2, "0")}</span>
+          <div className="mx-auto max-w-6xl px-3 sm:px-6 pb-2">
+            <div className="rounded-xl bg-black/55 border border-white/15 backdrop-blur grid grid-flow-col auto-cols-max gap-3 sm:gap-4 px-3 sm:px-4 py-2 overflow-x-auto no-scrollbar">
+              {["Days", "Hours", "Minutes", "Seconds"].map((lbl, idx) => (
+                <div key={lbl} className="flex items-baseline gap-2 pr-1">
+                  <span className="text-xs uppercase text-white/60 tracking-widest min-w-12">{lbl}</span>
+                  <span className="font-mono text-lg" suppressHydrationWarning>
+                    {hydrated ? [d, h, m, s][idx].toString().padStart(2, "0") : "--"}
+                  </span>
                 </div>
               ))}
             </div>
@@ -663,11 +579,11 @@ export default function Page() {
             {/* Text */}
             <div className="order-2 md:order-1">
               <p className="text-white/90 text-lg md:text-xl leading-relaxed md:leading-8">
-                Awaazein is DFW’s premier South Asian a-capella competition. Translating to
-                “The Voices” in Hindi, Awaazein is a bid competition under the Association of
-                South Asian A-Capella (ASA). Teams from across the nation compete at Awaazein
-                for a chance to take home the trophy and advance to the prestigious
-                national showcase: All American Awaaz.
+                Awaazein is DFW&apos;s premier South Asian a-capella competition. Translating to
+                &quot;The Voices&quot; in Hindi, Awaazein is a bid competition under the Association of
+                South Asian A-Capella (ASA). Teams from all over the nation participate in Awaazein,
+                hoping for a chance to win the coveted award and advance to the prestigious national
+                competition: All American Awaaz. Check out their website for more information.
               </p>
 
               <div className="mt-4 flex flex-wrap gap-3">
@@ -817,10 +733,10 @@ export default function Page() {
             {/* Text */}
             <div className="order-2 md:order-1">
               <p className="text-white/90 text-lg md:text-xl leading-relaxed md:leading-8">
-                Be a part of our Awaazein Family and see the behind-the-scenes of our competition!
-                Volunteers support all major parts of the weekend and are the backbone of Awaazein.
-                It’s the perfect way to get involved with the circuit without a heavy time commitment.
-                Click the link below to apply—we look forward to working with you!
+                Be a part of our Awaazein family and see the behind-the-scenes of our competition!
+                Volunteers help with the major parts of the weekend and are the backbone of Awaazein.
+                This is the perfect way to get involved with the circuit without a heavy time commitment.
+                Click the link below to submit an application—we look forward to working with you!
               </p>
 
               <p className="mt-3 text-white/75 italic">— Awaazein Executive Board</p>
@@ -864,7 +780,7 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-      {/* BOARD — moved before Gallery per request */}
+      {/* BOARD (moved before Gallery) */}
       <Section id="board" title="Meet Our Amazing Board Members">
         {/* Directors */}
         <div className="mb-4">
@@ -902,145 +818,51 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Logistics */}
-        <div className="mt-10 mb-4">
-          <h3 className="text-2xl md:text-3xl font-extrabold">Logistics</h3>
-        </div>
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {logistics.map((l) => (
-              <DriverCard key={l.name} driver={l} onOpen={openLightbox} />
-            ))}
-          </div>
-        </FadeIn>
-
-        {/* Finance */}
-        <div className="mt-10 mb-4">
-          <h3 className="text-2xl md:text-3xl font-extrabold">Finance</h3>
-        </div>
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {finance.map((f) => (
-              <DriverCard key={f.name} driver={f} onOpen={openLightbox} />
-            ))}
-          </div>
-        </FadeIn>
-
-        {/* Tech */}
-        <div className="mt-10 mb-4">
-          <h3 className="text-2xl md:text-3xl font-extrabold">Tech</h3>
-        </div>
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {tech.map((t) => (
-              <DriverCard key={t.name} driver={t} onOpen={openLightbox} />
-            ))}
-          </div>
-        </FadeIn>
-
-        {/* Liaison Coordinators */}
-        <div className="mt-10 mb-4">
-          <h3 className="text-2xl md:text-3xl font-extrabold">Liaison Coordinators</h3>
-        </div>
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {liaisonCoordinators.map((lc) => (
-              <DriverCard key={lc.name} driver={lc} onOpen={openLightbox} />
-            ))}
-          </div>
-        </FadeIn>
-
-        {/* After Party */}
-        <div className="mt-10 mb-4">
-          <h3 className="text-2xl md:text-3xl font-extrabold">After Party</h3>
-        </div>
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {afterParty.map((ap) => (
-              <DriverCard key={ap.name} driver={ap} onOpen={openLightbox} />
-            ))}
-          </div>
-        </FadeIn>
-
-        {/* Mixer */}
-        <div className="mt-10 mb-4">
-          <h3 className="text-2xl md:text-3xl font-extrabold">Mixer</h3>
-        </div>
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {mixer.map((mx) => (
-              <DriverCard key={mx.name} driver={mx} onOpen={openLightbox} />
-            ))}
-          </div>
-        </FadeIn>
-
-        {/* Registration */}
-        <div className="mt-10 mb-4">
-          <h3 className="text-2xl md:text-3xl font-extrabold">Registration</h3>
-        </div>
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {registration.map((r) => (
-              <DriverCard key={r.name} driver={r} onOpen={openLightbox} />
-            ))}
-          </div>
-        </FadeIn>
-
-        {/* Hospitality */}
-        <div className="mt-10 mb-4">
-          <h3 className="text-2xl md:text-3xl font-extrabold">Hospitality</h3>
-        </div>
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {hospitality.map((h) => (
-              <DriverCard key={h.name} driver={h} onOpen={openLightbox} />
-            ))}
-          </div>
-        </FadeIn>
-
-        {/* Marketing */}
-        <div className="mt-10 mb-4">
-          <h3 className="text-2xl md:text-3xl font-extrabold">Marketing</h3>
-        </div>
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {marketing.map((m) => (
-              <DriverCard key={m.name} driver={m} onOpen={openLightbox} />
-            ))}
-          </div>
-        </FadeIn>
-
-        {/* Graphics */}
-        <div className="mt-10 mb-4">
-          <h3 className="text-2xl md:text-3xl font-extrabold">Graphics</h3>
-        </div>
-        <FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {graphics.map((g) => (
-              <DriverCard key={g.name} driver={g} onOpen={openLightbox} />
-            ))}
-          </div>
-        </FadeIn>
+        {/* Teams */}
+        {[
+          { title: "Logistics", list: logistics },
+          { title: "Finance", list: finance },
+          { title: "Tech", list: tech },
+          { title: "Liaison Coordinators", list: liaisonCoordinators },
+          { title: "After Party", list: afterParty },
+          { title: "Mixer", list: mixer },
+          { title: "Registration", list: registration },
+          { title: "Hospitality", list: hospitality },
+          { title: "Marketing", list: marketing },
+          { title: "Graphics", list: graphics },
+        ].map((grp) => (
+          <React.Fragment key={grp.title}>
+            <div className="mt-10 mb-4">
+              <h3 className="text-2xl md:text-3xl font-extrabold">{grp.title}</h3>
+            </div>
+            <FadeIn>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {grp.list.map((p) => (
+                  <DriverCard key={p.name} driver={p} onOpen={openLightbox} />
+                ))}
+              </div>
+            </FadeIn>
+          </React.Fragment>
+        ))}
 
         <CheckeredDivider />
       </Section>
 
-      {/* SPONSORSHIP (two-column split) */}
+      {/* SPONSORSHIP */}
       <Section id="sponsorship" title="Sponsorship">
         <FadeIn>
           <div className="grid md:grid-cols-2 gap-8">
+            {/* Left: sponsor info + packet */}
             <div className={cx("rounded-2xl p-6 border", theme.ring, theme.panel)}>
-              <h3 className="text-xl font-bold mb-3">Partner with Awaazein</h3>
+              <h3 className="text-xl font-bold mb-3">Partner With Us</h3>
               <p className="text-white/90">
-                Interested in supporting our show and promoting your brand? Awaazein gathers a diverse audience from
-                across the nation—the perfect place to advertise your business. Click below to view our sponsorship
-                packet for more information. If interested, please email <span className="font-semibold">awaazeinexec@gmail.com</span>.
+                Interested in supporting our show and promoting your brand? Awaazein gathers an
+                audience of diverse individuals from across the nation—an ideal place to advertise
+                your business. Click below to view our sponsorship packet for more information. If
+                interested, please email <span className="font-semibold">awaazeinexec@gmail.com</span>.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
-                <Button
-                  asChild
-                  className="bg-[#00E0FF] hover:bg-[#0cc9ea] text-black font-semibold shadow-[0_0_22px_rgba(0,224,255,0.4)]"
-                >
+                <Button asChild className="bg-[#00E0FF] hover:bg-[#02b8cf] text-black font-semibold">
                   <a href="/SPONSORSHIP PACKET 2026.pdf" target="_blank" rel="noopener noreferrer">
                     View Sponsorship Packet (PDF)
                   </a>
@@ -1051,20 +873,25 @@ export default function Page() {
               </div>
             </div>
 
+            {/* Right: donations */}
             <div className={cx("rounded-2xl p-6 border", theme.ring, theme.panel)}>
               <h3 className="text-xl font-bold mb-3">Make a Donation</h3>
               <p className="text-white/90">
-                Interested in making a donation? Awaazein’s success comes from the support of its strong community.
-                All monetary donations go toward boosting hospitality and enhancing the overall experience for teams.
-                Our executive board thanks you in advance for your generosity!
+                Interested in making a donation? Awaazein&apos;s success comes from the support of its strong
+                community. All monetary donations go toward enhancing hospitality and the overall team
+                experience. Our executive board thanks you in advance for your generosity!
               </p>
               <div className="mt-5">
                 <Button
                   asChild
                   className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_22px_rgba(225,6,0,0.45)]"
                 >
-                  <a href="https://gofund.me/1bbb82734" target="_blank" rel="noopener noreferrer">
-                    Donate to Awaazein
+                  <a
+                    href="https://gofund.me/1bbb82734"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Donate on GoFundMe
                   </a>
                 </Button>
               </div>
@@ -1075,83 +902,133 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-/* ── GALLERY — Puzzle collage, sharp images ── */
-<Section id="gallery" title="Previous Show Gallery">
-  <FadeIn>
-    {/* black gutters like your reference */}
-    <div className="rounded-2xl bg-black p-1 sm:p-2">
-      {/* 12-col collage on md+, tidy 2-col on mobile */}
-      <div className="grid gap-1 sm:gap-2 grid-cols-2 md:grid-cols-12 auto-rows-[10px] md:auto-rows-[12px]">
-        {Array.from({ length: 19 }, (_, i) => i + 1).map((n, i) => {
-          // carefully chosen spans to mimic the example mosaic
-          const pattern = [
-            { c: 8, r: 18 }, // wide hero
-            { c: 4, r: 12 }, // tall right
-            { c: 4, r: 14 },
-            { c: 4, r: 14 },
-            { c: 4, r: 14 },
-            { c: 7, r: 22 }, // large wide center
-            { c: 5, r: 22 }, // large portrait
-            { c: 4, r: 16 },
-            { c: 4, r: 16 },
-            { c: 4, r: 16 },
-            { c: 5, r: 18 },
-            { c: 7, r: 18 },
-            { c: 4, r: 14 },
-            { c: 4, r: 14 },
-            { c: 4, r: 14 },
-            { c: 8, r: 18 },
-            { c: 4, r: 12 },
-            { c: 6, r: 16 },
-            { c: 6, r: 16 },
-          ][i % 19];
+      {/* GALLERY — Puzzle collage */}
+      <Section id="gallery" title="Previous Show Gallery">
+        <FadeIn>
+          {/* black gutters like the reference */}
+          <div className="rounded-2xl bg-black p-1 sm:p-2">
+            {/* 12-col collage on md+, tidy 2-col on mobile */}
+            <div className="grid gap-1 sm:gap-2 grid-cols-2 md:grid-cols-12 auto-rows-[10px] md:auto-rows-[12px]">
+              {Array.from({ length: 19 }, (_, i) => i + 1).map((n, i) => {
+                // carefully chosen spans to mimic the example mosaic
+                const pattern = [
+                  { c: 8, r: 18 }, // wide hero
+                  { c: 4, r: 12 }, // tall right
+                  { c: 4, r: 14 },
+                  { c: 4, r: 14 },
+                  { c: 4, r: 14 },
+                  { c: 7, r: 22 }, // large wide center
+                  { c: 5, r: 22 }, // large portrait
+                  { c: 4, r: 16 },
+                  { c: 4, r: 16 },
+                  { c: 4, r: 16 },
+                  { c: 5, r: 18 },
+                  { c: 7, r: 18 },
+                  { c: 4, r: 14 },
+                  { c: 4, r: 14 },
+                  { c: 4, r: 14 },
+                  { c: 8, r: 18 },
+                  { c: 4, r: 12 },
+                  { c: 6, r: 16 },
+                  { c: 6, r: 16 },
+                ][i % 19];
 
-          // Mobile: simple, non-messy; Desktop: puzzle spans
-          const base = "relative overflow-hidden rounded-sm md:rounded-md ring-1 ring-white/10 group cursor-zoom-in";
-          const mobileSpan = "col-span-1 row-span-[26]"; // steady height on mobile
-          const desktopSpan = `md:col-span-${pattern.c} md:row-span-[${pattern.r}]`;
+                const base =
+                  "relative overflow-hidden rounded-sm md:rounded-md ring-1 ring-white/10 group cursor-zoom-in";
+                const mobileSpan = "col-span-1 row-span-[26]"; // steady height on mobile
+                const desktopSpan = `md:col-span-${pattern.c} md:row-span-[${pattern.r}]`;
 
-          return (
-            <div
-              key={n}
-              className={`${base} ${mobileSpan} ${desktopSpan}`}
-              onClick={() => openLightbox(`/stage/Stage${n}.JPG`, `Stage photo ${n}`)}
-            >
-              {/* Use Next Image with explicit sizes + high quality to avoid blur */}
-              <Image
-                src={`/stage/Stage${n}.JPG`}
-                alt={`Stage photo ${n}`}
-                fill
-                priority={i < 4}
-                quality={95}
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                sizes="
-                  (min-width:1280px) 20vw,
-                  (min-width:1024px) 25vw,
-                  (min-width:768px) 33vw,
-                  50vw"
-              />
-              {/* neon hover edge */}
-              <div className="pointer-events-none absolute inset-0 rounded-sm md:rounded-md ring-1 ring-transparent group-hover:ring-[#00E0FF]/50 group-hover:shadow-[0_0_22px_rgba(0,224,255,0.25)] transition-all" />
+                return (
+                  <div
+                    key={n}
+                    className={`${base} ${mobileSpan} ${desktopSpan}`}
+                    onClick={() => openLightbox(`/stage/Stage${n}.JPG`, `Stage photo ${n}`)}
+                  >
+                    <Image
+                      src={`/stage/Stage${n}.JPG`}
+                      alt={`Stage photo ${n}`}
+                      fill
+                      priority={i < 4}
+                      quality={95}
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                      sizes="
+                        (min-width:1280px) 20vw,
+                        (min-width:1024px) 25vw,
+                        (min-width:768px) 33vw,
+                        50vw"
+                    />
+                    {/* neon hover edge */}
+                    <div className="pointer-events-none absolute inset-0 rounded-sm md:rounded-md ring-1 ring-transparent group-hover:ring-[#00E0FF]/50 group-hover:shadow-[0_0_22px_rgba(0,224,255,0.25)] transition-all" />
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
-    </div>
-  </FadeIn>
+          </div>
+        </FadeIn>
 
-  <CheckeredDivider />
-</Section>
-
+        <CheckeredDivider />
+      </Section>
 
       {/* CONTACT */}
       <Section id="contact" title="Contact Us">
         <FadeIn>
           <div className={cx("rounded-2xl p-8 border", theme.ring, theme.panel)}>
             <p className="text-white/90 mb-6">
-              Questions about tickets, sponsorships, or volunteering? Send us a message here and we’ll reply via email.
+              For inquiries, sponsorships, or volunteering, send us a message and we&apos;ll get back quickly.
             </p>
-            <ContactForm />
+
+            <form ref={formRef} onSubmit={onSubmit} className="grid gap-4 max-w-2xl">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="grid gap-1">
+                  <span className="text-sm text-white/70">Name</span>
+                  <input
+                    name="name"
+                    required
+                    className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]"
+                  />
+                </label>
+                <label className="grid gap-1">
+                  <span className="text-sm text-white/70">Email</span>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]"
+                  />
+                </label>
+              </div>
+
+              <label className="grid gap-1">
+                <span className="text-sm text-white/70">Subject</span>
+                <input
+                  name="subject"
+                  required
+                  className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]"
+                />
+              </label>
+
+              <label className="grid gap-1">
+                <span className="text-sm text-white/70">Message</span>
+                <textarea
+                  name="message"
+                  rows={5}
+                  required
+                  className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF] resize-y"
+                />
+              </label>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  type="submit"
+                  disabled={sending}
+                  className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_25px_rgba(225,6,0,0.45)] disabled:opacity-60"
+                >
+                  {sending ? "Sending…" : "Send Message"}
+                </Button>
+                {sent === "ok" && <span className="text-green-400">Sent! We&apos;ll reply soon.</span>}
+                {sent === "err" && <span className="text-red-400">Something went wrong. Please try again.</span>}
+              </div>
+            </form>
           </div>
         </FadeIn>
       </Section>
@@ -1168,7 +1045,7 @@ export default function Page() {
             <a href="#about" className="hover:text-white">About</a>
             <a href="#venue" className="hover:text-white">Venue</a>
             <a href="#lineup" className="hover:text-white">Line Up</a>
-            <a href="#volunteer" className="hover:text-white">Volunteer</a>
+            <a href="#volunteer" className="hover:text-white">Volunteer Info</a>
             <a href="#board" className="hover:text-white">Board</a>
             <a href="#sponsorship" className="hover:text-white">Sponsorship</a>
             <a href="#gallery" className="hover:text-white">Gallery</a>
