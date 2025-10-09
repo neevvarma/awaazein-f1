@@ -70,40 +70,47 @@ function useCountdown(to: Date) {
   return t;
 }
 
-/* ── Background neon sweeps (brighter) ── */
+/* ── Background neon sweeps (brighter + subtle motion) ── */
 const SpeedLines: React.FC = () => (
-  <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-    {/* Big soft glow pools */}
+  <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden -z-10">
+    {/* deep base */}
+    <div className="absolute inset-0" style={{ background: "#070b14" }} />
+    {/* big color pools */}
     <div
-      className="absolute -inset-40"
+      className="absolute -inset-40 animate-[pulse_6s_ease-in-out_infinite]"
       style={{
         background:
-          // invert the previous balance: push more intense red/blue
-          "radial-gradient(1200px 720px at 20% 15%, rgba(0,224,255,0.35), transparent 60%)," +
-          "radial-gradient(1200px 720px at 82% 70%, rgba(225,6,0,0.35), transparent 60%)",
-        filter: "saturate(180%) blur(0.5px)",
+          "radial-gradient(1200px 720px at 22% 16%, rgba(0,224,255,0.42), transparent 60%)," +
+          "radial-gradient(1200px 720px at 80% 72%, rgba(225,6,0,0.40), transparent 60%)",
+        filter: "saturate(185%) blur(0.6px)",
       }}
     />
-    {/* Racing streaks */}
+    {/* fast streaks */}
     <div
-      className="absolute -right-[25%] -top-16 h-[160%] w-[90%] rotate-[18deg] opacity-90"
-      style={{ background: "linear-gradient(90deg, transparent, rgba(0,224,255,0.75), transparent)" }}
+      className="absolute -right-[24%] -top-20 h-[170%] w-[95%] rotate-[18deg] opacity-95 animate-[sweep1_14s_linear_infinite]"
+      style={{ background: "linear-gradient(90deg, transparent, rgba(0,224,255,0.85), transparent)" }}
     />
     <div
-      className="absolute -left-[28%] top-1/3 h-[140%] w-[80%] -rotate-[12deg] opacity-90"
-      style={{ background: "linear-gradient(90deg, transparent, rgba(225,6,0,0.75), transparent)" }}
+      className="absolute -left-[28%] top-1/3 h-[150%] w-[82%] -rotate-[12deg] opacity-95 animate-[sweep2_16s_linear_infinite]"
+      style={{ background: "linear-gradient(90deg, transparent, rgba(225,6,0,0.85), transparent)" }}
     />
-    {/* Subtle cross-glow */}
+    {/* faint cross-glow */}
     <div
       className="absolute inset-0 opacity-50"
       style={{
         background:
-          "conic-gradient(from 120deg at 30% 20%, rgba(0,224,255,0.25), transparent 30%)," +
-          "conic-gradient(from -60deg at 70% 80%, rgba(225,6,0,0.25), transparent 30%)",
+          "conic-gradient(from 120deg at 30% 20%, rgba(0,224,255,0.28), transparent 30%)," +
+          "conic-gradient(from -60deg at 70% 80%, rgba(225,6,0,0.28), transparent 30%)",
       }}
     />
+    <style jsx global>{`
+      @keyframes sweep1 { 0% {transform: translateX(0);} 100% {transform: translateX(-8%);} }
+      @keyframes sweep2 { 0% {transform: translateX(0);} 100% {transform: translateX(6%);} }
+      @keyframes pulse  { 0%,100% {opacity:.95} 50% {opacity:.8} }
+    `}</style>
   </div>
 );
+
 
 /* ── Parallax track lines ── */
 const TrackParallax: React.FC = () => {
@@ -1068,54 +1075,74 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-      {/* GALLERY — Puzzle collage */}
-      <Section id="gallery" title="Previous Show Gallery">
-        <FadeIn>
-          <div
-            className="
-              grid gap-3
-              grid-cols-2
-              sm:grid-cols-3
-              md:grid-cols-6
-              auto-rows-[8px] md:auto-rows-[10px]
-            "
-          >
-            {stageImgs.map((src, idx) => {
-              const sp = spans[idx % spans.length];
-              // On mobile, keep spans modest; on md+ use full puzzle spans
-              const mobileSpan = "col-span-1 row-span-[20]";
-              const desktopSpan = `md:col-span-${sp.c} md:row-span-[${sp.r * 20}]`;
+/* ── GALLERY — Puzzle collage, sharp images ── */
+<Section id="gallery" title="Previous Show Gallery">
+  <FadeIn>
+    {/* black gutters like your reference */}
+    <div className="rounded-2xl bg-black p-1 sm:p-2">
+      {/* 12-col collage on md+, tidy 2-col on mobile */}
+      <div className="grid gap-1 sm:gap-2 grid-cols-2 md:grid-cols-12 auto-rows-[10px] md:auto-rows-[12px]">
+        {Array.from({ length: 19 }, (_, i) => i + 1).map((n, i) => {
+          // carefully chosen spans to mimic the example mosaic
+          const pattern = [
+            { c: 8, r: 18 }, // wide hero
+            { c: 4, r: 12 }, // tall right
+            { c: 4, r: 14 },
+            { c: 4, r: 14 },
+            { c: 4, r: 14 },
+            { c: 7, r: 22 }, // large wide center
+            { c: 5, r: 22 }, // large portrait
+            { c: 4, r: 16 },
+            { c: 4, r: 16 },
+            { c: 4, r: 16 },
+            { c: 5, r: 18 },
+            { c: 7, r: 18 },
+            { c: 4, r: 14 },
+            { c: 4, r: 14 },
+            { c: 4, r: 14 },
+            { c: 8, r: 18 },
+            { c: 4, r: 12 },
+            { c: 6, r: 16 },
+            { c: 6, r: 16 },
+          ][i % 19];
 
-              return (
-                <div
-                  key={src}
-                  className={cx(
-                    "relative overflow-hidden rounded-xl ring-1 ring-white/10 group cursor-zoom-in",
-                    mobileSpan,
-                    desktopSpan
-                  )}
-                  onClick={() => openLightbox(src, `Stage photo ${idx + 1}`)}
-                >
-                  {/* Use fill + object-cover; quality up; sizes set to reduce blur */}
-                  <Image
-                    src={src}
-                    alt={`Stage photo ${idx + 1}`}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03] will-change-transform"
-                    sizes="(min-width: 1024px) 20vw, (min-width: 768px) 33vw, 50vw"
-                    quality={95}
-                    priority={idx < 6}
-                  />
-                  {/* Subtle neon stroke on hover */}
-                  <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-transparent group-hover:ring-[#00E0FF]/50 group-hover:shadow-[0_0_25px_rgba(0,224,255,0.25)] transition-all" />
-                </div>
-              );
-            })}
-          </div>
-        </FadeIn>
+          // Mobile: simple, non-messy; Desktop: puzzle spans
+          const base = "relative overflow-hidden rounded-sm md:rounded-md ring-1 ring-white/10 group cursor-zoom-in";
+          const mobileSpan = "col-span-1 row-span-[26]"; // steady height on mobile
+          const desktopSpan = `md:col-span-${pattern.c} md:row-span-[${pattern.r}]`;
 
-        <CheckeredDivider />
-      </Section>
+          return (
+            <div
+              key={n}
+              className={`${base} ${mobileSpan} ${desktopSpan}`}
+              onClick={() => openLightbox(`/stage/Stage${n}.JPG`, `Stage photo ${n}`)}
+            >
+              {/* Use Next Image with explicit sizes + high quality to avoid blur */}
+              <Image
+                src={`/stage/Stage${n}.JPG`}
+                alt={`Stage photo ${n}`}
+                fill
+                priority={i < 4}
+                quality={95}
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                sizes="
+                  (min-width:1280px) 20vw,
+                  (min-width:1024px) 25vw,
+                  (min-width:768px) 33vw,
+                  50vw"
+              />
+              {/* neon hover edge */}
+              <div className="pointer-events-none absolute inset-0 rounded-sm md:rounded-md ring-1 ring-transparent group-hover:ring-[#00E0FF]/50 group-hover:shadow-[0_0_22px_rgba(0,224,255,0.25)] transition-all" />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </FadeIn>
+
+  <CheckeredDivider />
+</Section>
+
 
       {/* CONTACT */}
       <Section id="contact" title="Contact Us">
