@@ -3,13 +3,12 @@
 import React from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { CalendarDays, MapPin, Users, X, Flag } from "lucide-react";
+import { CalendarDays, MapPin, Users, X, Flag, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Orbitron } from "next/font/google";
 
 /* ────────────────────────────────────────────────────────────────
-   Awaazein F1 — Site
-   Home • About • Venue • Line Up • Volunteer • Sponsorship • Gallery • Board • Contact
+   Awaazein F1 — Site (mobile polish)
 ──────────────────────────────────────────────────────────────── */
 
 const EVENT_DATE = new Date("2026-02-21T18:00:00-06:00"); // Feb 21, 2026
@@ -22,7 +21,6 @@ const orbitron = Orbitron({
   variable: "--font-orbitron",
 });
 
-// Labels under the photo
 const BOARD_LABEL_POSITION: "below" | "topRight" = "below";
 
 const theme = {
@@ -271,7 +269,7 @@ const ComingSoonModal: React.FC<{ open: boolean; onClose: () => void }> = ({ ope
       <div className="w-[90%] max-w-md rounded-2xl border border-white/15 bg-white/10 p-6 text-white shadow-xl">
         <h3 className={cx("text-xl font-semibold mb-2", ACCENT_HEADING)}>Tickets — Coming Soon</h3>
         <p className="text-white/90">
-          Tickets for Awaazein (Feb 21, 2026 • Irving, TX) will be released soon. Check back here or follow our socials.
+          Tickets for Awaazein (Feb 21, 2026 &bull; Irving, TX) will be released soon. Check back here or follow our socials.
         </p>
         <div className="mt-5 flex justify-end">
           <Button onClick={onClose} className="bg-[#E10600] hover:bg-[#c70500]">Close</Button>
@@ -281,7 +279,7 @@ const ComingSoonModal: React.FC<{ open: boolean; onClose: () => void }> = ({ ope
   );
 };
 
-/* ── Lightbox ── */
+/* ── Lightbox (mobile-friendly close) ── */
 const Lightbox: React.FC<{ src: string | null; alt: string; onClose: () => void }> = ({
   src,
   alt,
@@ -301,18 +299,42 @@ const Lightbox: React.FC<{ src: string | null; alt: string; onClose: () => void 
       className="fixed inset-0 z-[110] bg-black/90 backdrop-blur-sm grid place-items-center"
       role="dialog"
       aria-modal="true"
-      aria-label="Image viewer. Press Escape to close."
+      aria-label="Image viewer. Tap Close or outside image to exit."
       onClick={onClose}
+      onTouchStart={(e) => {
+        // If the initial touch is outside the image container, close.
+        if ((e.target as HTMLElement).closest("#lightbox-image-wrap") === null) onClose();
+      }}
     >
       <button
-        onClick={onClose}
-        className="absolute top-4 right-4 inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        className="fixed top-4 right-4 inline-flex items-center justify-center h-12 w-12 rounded-full bg-white/15 hover:bg-white/25 border border-white/30 text-white shadow-lg"
         aria-label="Close image viewer"
       >
-        <X size={18} />
+        <X size={22} />
       </button>
-      <div className="relative w-[92vw] h-[92vh]" onClick={(e) => e.stopPropagation()}>
-        <Image src={src!} alt={alt} fill className="object-contain select-none" priority />
+
+      {/* Big tappable close at bottom on phones */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full bg-white/15 border border-white/25 text-white text-sm"
+        aria-label="Close"
+      >
+        Close
+      </button>
+
+      <div
+        id="lightbox-image-wrap"
+        className="relative w-[92vw] h-[92vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Image src={src} alt={alt} fill className="object-contain select-none" priority />
       </div>
     </div>
   );
@@ -346,7 +368,7 @@ const DriverCard: React.FC<{
           alt={`${driver.name} headshot`}
           fill
           className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
-          sizes="(min-width: 768px) 360px, 100vw"
+          sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
         />
       </div>
       {BOARD_LABEL_POSITION === "below" && (
@@ -362,7 +384,7 @@ const DriverCard: React.FC<{
   );
 };
 
-/* ── Collage item for the Gallery ── */
+/* ── Collage item for the Gallery (sharper sizes on mobile) ── */
 const CollageItem: React.FC<{
   src: string;
   alt: string;
@@ -381,12 +403,142 @@ const CollageItem: React.FC<{
       src={src}
       alt={alt}
       fill
-      sizes="(min-width:1280px) 25vw, (min-width:768px) 33vw, (min-width:640px) 50vw, 100vw"
+      // Higher requested width on mobile to avoid blur, puzzle still responsive
+      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
       className="object-cover transition-transform duration-500 group-hover:scale-[1.03] group-hover:brightness-110"
-      quality={95}
+      priority={alt.endsWith("1") || alt.endsWith("2")}
     />
   </div>
 );
+
+/* ── Contact Form (posts to /api/contact) ── */
+type PostResult = { ok: boolean; error?: string };
+
+const ContactForm: React.FC = () => {
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [subject, setSubject] = React.useState("");
+  const [message, setMessage] = React.useState("");
+  const [sending, setSending] = React.useState(false);
+  const [done, setDone] = React.useState<null | "ok" | "err">(null);
+  const [errMsg, setErrMsg] = React.useState("");
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSending(true);
+    setDone(null);
+    setErrMsg("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, subject, message }),
+      });
+      const data = (await res.json()) as PostResult;
+      if (!res.ok || !data.ok) {
+        setDone("err");
+        setErrMsg(data.error || "Something went wrong. Please try again.");
+      } else {
+        setDone("ok");
+        setName("");
+        setEmail("");
+        setSubject("");
+        setMessage("");
+      }
+    } catch {
+      setDone("err");
+      setErrMsg("Network error. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="grid gap-3">
+      <div className="grid sm:grid-cols-2 gap-3">
+        <input
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your name"
+          className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/50"
+        />
+        <input
+          required
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Your email"
+          className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/50"
+        />
+      </div>
+      <input
+        required
+        value={subject}
+        onChange={(e) => setSubject(e.target.value)}
+        placeholder="Subject"
+        className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/50"
+      />
+      <textarea
+        required
+        rows={5}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Your message"
+        className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]/50"
+      />
+      <div className="flex items-center gap-3">
+        <Button
+          type="submit"
+          disabled={sending}
+          className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_22px_rgba(225,6,0,0.45)]"
+        >
+          {sending ? "Sending..." : "Send Message"}
+        </Button>
+        {done === "ok" && <span className="text-green-300 text-sm">Message sent!</span>}
+        {done === "err" && <span className="text-red-300 text-sm">{errMsg}</span>}
+      </div>
+    </form>
+  );
+};
+
+/* ── Mobile Menu ── */
+const MobileMenu: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClose }) => {
+  if (!open) return null;
+  const LinkItem = ({ href, label }: { href: string; label: string }) => (
+    <a onClick={onClose} href={href} className="block px-4 py-3 rounded-lg hover:bg-white/10">
+      {label}
+    </a>
+  );
+  return (
+    <div className="md:hidden fixed inset-0 z-40">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <nav className="absolute right-0 top-0 h-full w-[78%] max-w-xs bg-[#0B1528]/95 border-l border-white/15 p-4 text-white">
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-bold">Awaazein 2026</span>
+          <button
+            aria-label="Close menu"
+            onClick={onClose}
+            className="h-10 w-10 grid place-items-center rounded-full bg-white/10 border border-white/20"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="grid gap-1 text-sm">
+          <LinkItem href="#home" label="Home" />
+          <LinkItem href="#about" label="About" />
+          <LinkItem href="#venue" label="Venue" />
+          <LinkItem href="#lineup" label="Line Up" />
+          <LinkItem href="#volunteer" label="Volunteer Info" />
+          <LinkItem href="#sponsorship" label="Sponsorship" />
+          <LinkItem href="#gallery" label="Photo Gallery" />
+          <LinkItem href="#board" label="Board" />
+          <LinkItem href="#contact" label="Contact Us" />
+        </div>
+      </nav>
+    </div>
+  );
+};
 
 /* ── Page ── */
 export default function Page() {
@@ -403,6 +555,8 @@ export default function Page() {
     setLightboxSrc(src);
     setLightboxAlt(alt);
   };
+
+  const [menuOpen, setMenuOpen] = React.useState(false);
 
   // Directors
   const directors: Driver[] = [
@@ -518,39 +672,6 @@ export default function Page() {
     "col-span-1 sm:col-span-3 lg:col-span-8 [grid-row:span_18]",
   ].slice(0, stageImages.length);
 
-  // Contact form state (updated form adjustment)
-  const [sending, setSending] = React.useState(false);
-  const [sent, setSent] = React.useState<"idle" | "ok" | "err">("idle");
-  const formRef = React.useRef<HTMLFormElement>(null);
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (sending) return;
-    setSending(true);
-    setSent("idle");
-    const fd = new FormData(e.currentTarget);
-    const payload = {
-      name: String(fd.get("name") || ""),
-      email: String(fd.get("email") || ""),
-      subject: String(fd.get("subject") || ""),
-      message: String(fd.get("message") || ""),
-    };
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Bad response");
-      setSent("ok");
-      formRef.current?.reset();
-    } catch {
-      setSent("err");
-    } finally {
-      setSending(false);
-    }
-  }
-
   return (
     <main
       id="home"
@@ -580,6 +701,8 @@ export default function Page() {
             </div>
             <span className="font-bold tracking-wider">Awaazein 2026</span>
           </div>
+
+          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-white/90">
             <a href="#home" className="hover:text-white">Home</a>
             <a href="#about" className="hover:text-white">About</a>
@@ -597,16 +720,33 @@ export default function Page() {
               Tickets
             </Button>
           </nav>
+
+          {/* Mobile burger */}
+          <button
+            className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md bg-white/10 border border-white/20"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu size={18} />
+          </button>
         </div>
 
-        {/* HUD countdown bar (mobile-safe) */}
+        {/* Quick-scroll HUD (scrollable on mobile) */}
         <div className="sticky top-14 z-20">
           <div className="mx-auto max-w-6xl px-6 pb-2">
             <div className="rounded-xl bg-black/45 border border-white/15 backdrop-blur grid grid-flow-col auto-cols-max gap-4 px-4 py-2 overflow-x-auto no-scrollbar">
               {["Days", "Hours", "Minutes", "Seconds"].map((lbl, idx) => (
-                <div key={lbl} className="flex items-baseline gap-2">
-                  <span className="text-xs uppercase text-white/70 tracking-widest">{lbl}</span>
-                  <span className="font-mono text-lg" suppressHydrationWarning>
+                <div
+                  key={lbl}
+                  className={cx(
+                    "flex items-baseline gap-2",
+                    lbl === "Seconds" ? "hidden xs:flex" : "flex"
+                  )}
+                >
+                  <span className="text-[11px] uppercase text-white/70 tracking-widest whitespace-nowrap">
+                    {lbl}
+                  </span>
+                  <span className="font-mono text-base sm:text-lg" suppressHydrationWarning>
                     {hydrated ? [d, h, m, s][idx].toString().padStart(2, "0") : "--"}
                   </span>
                 </div>
@@ -615,6 +755,9 @@ export default function Page() {
           </div>
         </div>
       </header>
+
+      {/* Mobile slide-out menu */}
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       {/* HERO */}
       <section className="relative mx-auto max-w-6xl px-6 pt-20 pb-16">
@@ -631,7 +774,7 @@ export default function Page() {
             </motion.h1>
 
             <p className="mt-4 max-w-prose text-white/95">
-              South Asian a-capella like you’ve never seen it — speed, precision, and harmony.
+              South Asian a-capella like you&rsquo;ve never seen it &mdash; speed, precision, and harmony.
               Join us for a night where voices race to victory.
             </p>
 
@@ -644,7 +787,6 @@ export default function Page() {
               </Button>
             </div>
 
-            {/* Stats */}
             <div className="mt-8 grid sm:grid-cols-3 gap-6">
               <Stat label="Date" value={formatEventDate(EVENT_DATE)} icon={<CalendarDays size={18} />} />
               <Stat label="Venue" value={VENUE} icon={<MapPin size={18} />} />
@@ -654,7 +796,7 @@ export default function Page() {
 
           {/* Circular logo */}
           <div className="relative rounded-2xl border border-white/20 bg-black/30 p-6 md:p-8">
-            <div className="relative h-80 w-80 md:h-[26rem] md:w-[26rem] rounded-full overflow-hidden ring-2 ring-white/25 shadow-[0_0_100px_rgba(0,224,255,0.45)] mx-auto">
+            <div className="relative h-72 w-72 sm:h-80 sm:w-80 md:h-[26rem] md:w-[26rem] rounded-full overflow-hidden ring-2 ring-white/25 shadow-[0_0_100px_rgba(0,224,255,0.45)] mx-auto">
               <Image src="/awz-logo.png" alt="Awaazein Logo" fill className="object-contain bg-transparent" priority />
             </div>
           </div>
@@ -684,11 +826,10 @@ export default function Page() {
       <Section id="about" title="About Awaazein">
         <FadeIn>
           <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* Text */}
             <div className="order-2 md:order-1">
               <p className="text-white/95 text-lg md:text-xl leading-relaxed md:leading-8">
-                Awaazein is DFW&apos;s premier South Asian a-capella competition. Translating to
-                &quot;The Voices&quot; in Hindi, Awaazein is a bid competition under the Association of
+                Awaazein is DFW&rsquo;s premier South Asian a-capella competition. Translating to
+                &ldquo;The Voices&rdquo; in Hindi, Awaazein is a bid competition under the Association of
                 South Asian A-Capella (ASA). Teams from across the nation participate in Awaazein,
                 hoping for a chance to win the coveted award and advance to the prestigious national
                 competition: All American Awaaz.
@@ -709,7 +850,6 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Image (clickable) */}
             <div className="order-1 md:order-2">
               <div
                 className="group relative w-full aspect-[16/9] rounded-xl overflow-hidden ring-1 ring-white/15 cursor-zoom-in"
@@ -834,13 +974,12 @@ export default function Page() {
       <Section id="volunteer" title="Interested in Being a Volunteer?">
         <FadeIn>
           <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* Text */}
             <div className="order-2 md:order-1">
               <p className="text-white/95 text-lg md:text-xl leading-relaxed md:leading-8">
                 Be a part of our Awaazein Family and see the behind-the-scenes of our competition!
                 Volunteers help with the major parts of the weekend and are the backbone of Awaazein.
                 This is the perfect way to get involved with the circuit without a heavy time commitment.
-                Click the link below to submit an application—we look forward to working with you!
+                Click the link below to submit an application&mdash;we look forward to working with you!
               </p>
 
               <p className="mt-3 text-white/80 italic">— Awaazein Executive Board</p>
@@ -857,7 +996,6 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Image (clickable) */}
             <div className="order-1 md:order-2 md:-mt-10 lg:-mt-16">
               <div
                 className="group relative w-full aspect-[16/9] rounded-3xl overflow-hidden ring-1 ring-white/15 cursor-zoom-in"
@@ -882,13 +1020,12 @@ export default function Page() {
       <Section id="sponsorship" title="Sponsorship & Donations">
         <FadeIn>
           <div className="grid md:grid-cols-2 gap-6 lg:gap-10 items-start">
-            {/* Sponsorship */}
             <div className={cx("rounded-2xl p-6 md:p-7", theme.ring, theme.panel)}>
               <h3 className="text-xl md:text-2xl font-extrabold mb-3">Sponsor Awaazein</h3>
               <p className="text-white/95">
                 Interested in supporting our show and promoting your brand? Awaazein brings together a
-                diverse audience from across the nation—an ideal place to advertise your business.
-                Click below to view our sponsorship packet for more information. If you’re interested,
+                diverse audience from across the nation&mdash;an ideal place to advertise your business.
+                Click below to view our sponsorship packet for more information. If you&rsquo;re interested,
                 please email <a className="underline" href="mailto:awaazeinexec@gmail.com">awaazeinexec@gmail.com</a>.
               </p>
 
@@ -904,11 +1041,10 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Donations */}
             <div className={cx("rounded-2xl p-6 md:p-7", theme.ring, theme.panel)}>
               <h3 className="text-xl md:text-2xl font-extrabold mb-3">Make a Donation</h3>
               <p className="text-white/95">
-                Interested in making a donation? Awaazein’s success comes from the support of its strong
+                Interested in making a donation? Awaazein&rsquo;s success comes from the support of its strong
                 community. All monetary donations go toward boosting hospitality and the overall
                 experience for competing teams. Our executive board thanks you in advance for your support!
               </p>
@@ -932,7 +1068,6 @@ export default function Page() {
 
       {/* BOARD — BEFORE Gallery */}
       <Section id="board" title="Meet Our Amazing Board Members">
-        {/* Directors */}
         <div className="mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Directors</h3>
         </div>
@@ -944,7 +1079,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Assistant Directors */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Assistant Directors</h3>
         </div>
@@ -956,7 +1090,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Advisors */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Advisors</h3>
         </div>
@@ -968,7 +1101,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Logistics */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Logistics</h3>
         </div>
@@ -980,7 +1112,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Finance */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Finance</h3>
         </div>
@@ -992,7 +1123,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Tech */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Tech</h3>
         </div>
@@ -1004,7 +1134,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Liaison Coordinators */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Liaison Coordinators</h3>
         </div>
@@ -1016,7 +1145,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* After Party */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">After Party</h3>
         </div>
@@ -1028,7 +1156,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Mixer */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Mixer</h3>
         </div>
@@ -1040,7 +1167,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Registration */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Registration</h3>
         </div>
@@ -1052,7 +1178,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Hospitality */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Hospitality</h3>
         </div>
@@ -1064,7 +1189,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Marketing */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Marketing</h3>
         </div>
@@ -1076,7 +1200,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Graphics */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Graphics</h3>
         </div>
@@ -1113,66 +1236,14 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-      {/* CONTACT (updated form) */}
+      {/* CONTACT (keeps working with /api/contact via SMTP) */}
       <Section id="contact" title="Contact Us">
         <FadeIn>
-          <div className={cx("rounded-2xl p-8 border", theme.ring, theme.panel)}>
-            <p className="text-white/95 mb-6">
-              For inquiries, sponsorships, or volunteering, send us a message and we&apos;ll get back quickly.
+          <div className={cx("rounded-2xl p-6 md:p-8 border", theme.ring, theme.panel)}>
+            <p className="text-white/95 mb-5">
+              For inquiries, sponsorships, or volunteering, reach out and we&rsquo;ll get back quickly.
             </p>
-
-            <form ref={formRef} onSubmit={onSubmit} className="grid gap-4 max-w-2xl">
-              <div className="grid gap-2 sm:grid-cols-2">
-                <label className="grid gap-1">
-                  <span className="text-sm text-white/70">Name</span>
-                  <input
-                    name="name"
-                    required
-                    className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]"
-                  />
-                </label>
-                <label className="grid gap-1">
-                  <span className="text-sm text-white/70">Email</span>
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]"
-                  />
-                </label>
-              </div>
-
-              <label className="grid gap-1">
-                <span className="text-sm text-white/70">Subject</span>
-                <input
-                  name="subject"
-                  required
-                  className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]"
-                />
-              </label>
-
-              <label className="grid gap-1">
-                <span className="text-sm text-white/70">Message</span>
-                <textarea
-                  name="message"
-                  rows={5}
-                  required
-                  className="rounded-md bg-white/10 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF] resize-y"
-                />
-              </label>
-
-              <div className="flex items-center gap-3">
-                <Button
-                  type="submit"
-                  disabled={sending}
-                  className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_25px_rgba(225,6,0,0.45)] disabled:opacity-60"
-                >
-                  {sending ? "Sending…" : "Send Message"}
-                </Button>
-                {sent === "ok" && <span className="text-green-400">Sent! We&apos;ll reply soon.</span>}
-                {sent === "err" && <span className="text-red-400">Something went wrong. Please try again.</span>}
-              </div>
-            </form>
+            <ContactForm />
           </div>
         </FadeIn>
       </Section>
@@ -1184,16 +1255,16 @@ export default function Page() {
             <Image src="/awz-logo.png" alt="Awaazein" width={28} height={28} className="rounded-full" />
             <span>Awaazein 2026 • All rights reserved</span>
           </div>
-          <div className="flex items-center gap-6">
-            <a href="#home" className="hover:text-white">Home</a>
-            <a href="#about" className="hover:text-white">About</a>
-            <a href="#venue" className="hover:text-white">Venue</a>
-            <a href="#lineup" className="hover:text-white">Line Up</a>
-            <a href="#volunteer" className="hover:text-white">Volunteer Info</a>
-            <a href="#sponsorship" className="hover:text-white">Sponsorship</a>
-            <a href="#gallery" className="hover:text-white">Photo Gallery</a>
-            <a href="#board" className="hover:text-white">Board</a>
-            <a href="#contact" className="hover:text-white">Contact</a>
+          <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
+            <a href="#home" className="hover:text-white whitespace-nowrap">Home</a>
+            <a href="#about" className="hover:text-white whitespace-nowrap">About</a>
+            <a href="#venue" className="hover:text-white whitespace-nowrap">Venue</a>
+            <a href="#lineup" className="hover:text-white whitespace-nowrap">Line Up</a>
+            <a href="#volunteer" className="hover:text-white whitespace-nowrap">Volunteer Info</a>
+            <a href="#sponsorship" className="hover:text-white whitespace-nowrap">Sponsorship</a>
+            <a href="#gallery" className="hover:text-white whitespace-nowrap">Photo Gallery</a>
+            <a href="#board" className="hover:text-white whitespace-nowrap">Board</a>
+            <a href="#contact" className="hover:text-white whitespace-nowrap">Contact</a>
           </div>
         </div>
       </footer>
