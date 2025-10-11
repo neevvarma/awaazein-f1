@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { CalendarDays, MapPin, Users, X, Flag, Mail } from "lucide-react";
+import { CalendarDays, MapPin, Users, X, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Orbitron } from "next/font/google";
 
@@ -281,78 +281,38 @@ const ComingSoonModal: React.FC<{ open: boolean; onClose: () => void }> = ({ ope
   );
 };
 
-/* ── Lightbox (mobile-friendly: tap outside, big close, swipe-down) ── */
+/* ── Lightbox ── */
 const Lightbox: React.FC<{ src: string | null; alt: string; onClose: () => void }> = ({
   src,
   alt,
   onClose,
 }) => {
-  const startY = React.useRef<number | null>(null);
-  const deltaY = React.useRef<number>(0);
-
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
-    if (!src) return;
-
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKey);
-
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKey);
-    };
+    if (src) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [src, onClose]);
 
   if (!src) return null;
-
-  const onTouchStart: React.TouchEventHandler<HTMLDivElement> = (e) => {
-    startY.current = e.touches[0].clientY;
-    deltaY.current = 0;
-  };
-  const onTouchMove: React.TouchEventHandler<HTMLDivElement> = (e) => {
-    if (startY.current == null) return;
-    deltaY.current = e.touches[0].clientY - startY.current;
-  };
-  const onTouchEnd: React.TouchEventHandler<HTMLDivElement> = () => {
-    if (deltaY.current > 60) onClose(); // swipe-down to dismiss
-    startY.current = null;
-    deltaY.current = 0;
-  };
-
   return (
     <div
       className="fixed inset-0 z-[110] bg-black/90 backdrop-blur-sm grid place-items-center"
       role="dialog"
       aria-modal="true"
-      aria-label="Image viewer. Tap outside or press Close to exit."
+      aria-label="Image viewer. Press Escape to close."
       onClick={onClose}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
     >
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        className="absolute top-4 right-4 inline-flex items-center justify-center h-12 w-12 rounded-full bg-white/15 hover:bg-white/25 border border-white/25 text-white"
-        aria-label="Close"
+        onClick={onClose}
+        className="absolute top-4 right-4 inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white"
+        aria-label="Close image viewer"
       >
-        <X size={26} />
+        <X size={18} />
       </button>
-
       <div className="relative w-[92vw] h-[92vh]" onClick={(e) => e.stopPropagation()}>
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          className="object-contain select-none"
-          priority
-          sizes="100vw"
-        />
+        <Image src={src!} alt={alt} fill className="object-contain select-none" priority />
       </div>
     </div>
   );
@@ -423,111 +383,9 @@ const CollageItem: React.FC<{
       fill
       sizes="(min-width:1280px) 25vw, (min-width:768px) 33vw, (min-width:640px) 50vw, 100vw"
       className="object-cover transition-transform duration-500 group-hover:scale-[1.03] group-hover:brightness-110"
-      priority={false}
     />
   </div>
 );
-
-/* ── Contact Form (posts to /api/contact) ── */
-function ContactForm() {
-  const [loading, setLoading] = React.useState(false);
-  const [status, setStatus] = React.useState<null | { ok: boolean; msg: string }>(null);
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setStatus(null);
-    setLoading(true);
-    const fd = new FormData(e.currentTarget);
-    const payload = {
-      name: String(fd.get("name") || ""),
-      email: String(fd.get("email") || ""),
-      subject: String(fd.get("subject") || ""),
-      message: String(fd.get("message") || ""),
-    };
-
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "Something went wrong. Please try again.");
-      }
-      setStatus({ ok: true, msg: "Thanks! Your message was sent." });
-      (e.currentTarget as HTMLFormElement).reset();
-    } catch (err: unknown) {
-      setStatus({ ok: false, msg: err instanceof Error ? err.message : "Something went wrong. Please try again." });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <form onSubmit={onSubmit} className="grid gap-4">
-      <div className="grid md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="name" className="block text-sm text-white/80 mb-1">Name</label>
-          <input
-            id="name"
-            name="name"
-            required
-            className="w-full rounded-md border border-white/20 bg-black/30 px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-            placeholder="Your name"
-          />
-        </div>
-        <div>
-          <label htmlFor="email" className="block text-sm text-white/80 mb-1">Email</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            className="w-full rounded-md border border-white/20 bg-black/30 px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-            placeholder="you@example.com"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="subject" className="block text-sm text-white/80 mb-1">Subject</label>
-        <input
-          id="subject"
-          name="subject"
-          required
-          className="w-full rounded-md border border-white/20 bg-black/30 px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-          placeholder="How can we help?"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="message" className="block text-sm text-white/80 mb-1">Message</label>
-        <textarea
-          id="message"
-          name="message"
-          required
-          rows={5}
-          className="w-full rounded-md border border-white/20 bg-black/30 px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#00E0FF]/60"
-          placeholder="Write your message…"
-        />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <Button
-          type="submit"
-          disabled={loading}
-          className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_25px_rgba(225,6,0,0.45)]"
-        >
-          {loading ? "Sending..." : (<span className="inline-flex items-center gap-2"><Mail size={18}/>Send Message</span>)}
-        </Button>
-        {status && (
-          <span className={status.ok ? "text-emerald-400" : "text-red-400"}>{status.msg}</span>
-        )}
-      </div>
-    </form>
-  );
-}
 
 /* ── Page ── */
 export default function Page() {
@@ -707,13 +565,13 @@ export default function Page() {
           </nav>
         </div>
 
-        {/* HUD countdown bar (mobile-safe) */}
+        {/* HUD countdown bar */}
         <div className="sticky top-14 z-20">
           <div className="mx-auto max-w-6xl px-6 pb-2">
-            <div className="rounded-xl bg-black/45 border border-white/15 backdrop-blur grid grid-flow-col auto-cols-max gap-4 px-3 py-2 overflow-x-auto no-scrollbar">
+            <div className="rounded-xl bg-black/45 border border-white/15 backdrop-blur grid grid-flow-col auto-cols-max gap-4 px-4 py-2">
               {["Days", "Hours", "Minutes", "Seconds"].map((lbl, idx) => (
-                <div key={lbl} className="flex items-baseline gap-2 pr-1">
-                  <span className="text-[11px] uppercase text-white/70 tracking-widest whitespace-nowrap">{lbl}</span>
+                <div key={lbl} className="flex items-baseline gap-2">
+                  <span className="text-xs uppercase text-white/70 tracking-widest">{lbl}</span>
                   <span className="font-mono text-lg" suppressHydrationWarning>
                     {hydrated ? [d, h, m, s][idx].toString().padStart(2, "0") : "--"}
                   </span>
@@ -903,6 +761,11 @@ export default function Page() {
       <Section id="lineup">
         <div className="mb-4">
           <h2 className={cx("text-2xl md:text-3xl font-bold tracking-tight", ACCENT_HEADING)}>Line Up:</h2>
+          <div className="mt-1 text-3xl md:text-4xl font-extrabold text-white">10 Teams</div>
+          <div className="mt-1 flex items-center gap-2">
+            <div className="text-3xl md:text-4xl font-extrabold text-white">One Champion</div>
+            <Flag size={24} className="text-white/90" aria-hidden />
+          </div>
         </div>
 
         <FadeIn>
@@ -1216,15 +1079,118 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-      {/* CONTACT */}
+      {/* CONTACT — inline state and safe reset */}
       <Section id="contact" title="Contact Us">
         <FadeIn>
-          <div className={cx("rounded-2xl p-8 border", theme.ring, theme.panel)}>
-            <p className="text-white/95 mb-6">
-              For inquiries, sponsorships, or volunteering, reach out and we&rsquo;ll get back quickly.
-            </p>
-            <ContactForm />
-          </div>
+          {(() => {
+            const [status, setStatus] = React.useState<{ ok?: string; error?: string }>({});
+            const [loading, setLoading] = React.useState(false);
+            const formRef = React.useRef<HTMLFormElement>(null);
+
+            async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+              e.preventDefault();
+              setStatus({});
+              setLoading(true);
+
+              const fd = new FormData(e.currentTarget);
+              const payload = {
+                name: String(fd.get("name") || "").trim(),
+                email: String(fd.get("email") || "").trim(),
+                subject: String(fd.get("subject") || "").trim(),
+                message: String(fd.get("message") || "").trim(),
+              };
+
+              try {
+                const res = await fetch("/api/contact", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                });
+
+                let data: any = null;
+                try { data = await res.json(); } catch {}
+
+                if (!res.ok || (data && data.error)) {
+                  throw new Error(data?.error || "Something went wrong. Please try again.");
+                }
+
+                setStatus({ ok: "Thanks! Your message was sent." });
+                formRef.current?.reset();
+              } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+                setStatus({ error: msg });
+              } finally {
+                setLoading(false);
+              }
+            }
+
+            return (
+              <div className={cx("rounded-2xl p-8 border", theme.ring, theme.panel)}>
+                <p className="text-white/95 mb-6">
+                  For inquiries, sponsorships, or volunteering, reach out and we&rsquo;ll get back quickly.
+                </p>
+
+                <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="grid gap-1">
+                      <span className="text-sm text-white/80">Name</span>
+                      <input
+                        name="name"
+                        required
+                        className="rounded-md bg-black/30 border border-white/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-[#00E0FF]"
+                        placeholder="Your name"
+                      />
+                    </label>
+
+                    <label className="grid gap-1">
+                      <span className="text-sm text-white/80">Email</span>
+                      <input
+                        name="email"
+                        type="email"
+                        required
+                        className="rounded-md bg-black/30 border border-white/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-[#00E0FF]"
+                        placeholder="you@example.com"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="grid gap-1">
+                    <span className="text-sm text-white/80">Subject</span>
+                    <input
+                      name="subject"
+                      required
+                      className="rounded-md bg-black/30 border border-white/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-[#00E0FF]"
+                      placeholder="What’s this about?"
+                    />
+                  </label>
+
+                  <label className="grid gap-1">
+                    <span className="text-sm text-white/80">Message</span>
+                    <textarea
+                      name="message"
+                      required
+                      rows={5}
+                      className="rounded-md bg-black/30 border border-white/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-[#00E0FF] resize-vertical"
+                      placeholder="Say hello!"
+                    />
+                  </label>
+
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_30px_rgba(225,6,0,0.6)]"
+                    >
+                      {loading ? "Sending…" : "Send Message"}
+                    </Button>
+
+                    {status.ok && <span className="text-sm text-emerald-300">{status.ok}</span>}
+                    {status.error && <span className="text-sm text-red-300">{status.error}</span>}
+                  </div>
+                </form>
+              </div>
+            );
+          })()}
         </FadeIn>
       </Section>
 
