@@ -488,7 +488,7 @@ const ContactForm: React.FC = () => {
       </div>
       <input
         name="subject"
-        placeholder="Subject (optional)"
+        placeholder="Subject"
         className="rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]"
       />
       <textarea
