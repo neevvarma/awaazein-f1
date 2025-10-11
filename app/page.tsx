@@ -3,16 +3,15 @@
 import React from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { CalendarDays, MapPin, Users, X, Flag } from "lucide-react";
+import { CalendarDays, MapPin, Users, Mail, X, Flag, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Orbitron } from "next/font/google";
 
 /* ────────────────────────────────────────────────────────────────
    Awaazein F1 — Site
-   Home • About • Venue • Line Up • Volunteer • Sponsorship • Gallery • Board • Contact
 ──────────────────────────────────────────────────────────────── */
 
-const EVENT_DATE = new Date("2026-02-21T18:00:00-06:00"); // Feb 21, 2026
+const EVENT_DATE = new Date("2026-02-21T18:00:00-06:00");
 const VENUE = "Irving, TX";
 const TEAMS_COUNT = 10;
 
@@ -22,7 +21,6 @@ const orbitron = Orbitron({
   variable: "--font-orbitron",
 });
 
-// Labels under the photo
 const BOARD_LABEL_POSITION: "below" | "topRight" = "below";
 
 const theme = {
@@ -271,7 +269,7 @@ const ComingSoonModal: React.FC<{ open: boolean; onClose: () => void }> = ({ ope
       <div className="w-[90%] max-w-md rounded-2xl border border-white/15 bg-white/10 p-6 text-white shadow-xl">
         <h3 className={cx("text-xl font-semibold mb-2", ACCENT_HEADING)}>Tickets — Coming Soon</h3>
         <p className="text-white/90">
-          Tickets for Awaazein (Feb 21, 2026 &bull; Irving, TX) will be released soon. Check back here or follow our socials.
+          Tickets for Awaazein (Feb 21, 2026 • Irving, TX) will be released soon. Check back here or follow our socials.
         </p>
         <div className="mt-5 flex justify-end">
           <Button onClick={onClose} className="bg-[#E10600] hover:bg-[#c70500]">Close</Button>
@@ -281,7 +279,7 @@ const ComingSoonModal: React.FC<{ open: boolean; onClose: () => void }> = ({ ope
   );
 };
 
-/* ── Lightbox ── */
+/* ── Lightbox (mobile-friendly close) ── */
 const Lightbox: React.FC<{ src: string | null; alt: string; onClose: () => void }> = ({
   src,
   alt,
@@ -305,14 +303,17 @@ const Lightbox: React.FC<{ src: string | null; alt: string; onClose: () => void 
       onClick={onClose}
     >
       <button
-        onClick={onClose}
-        className="absolute top-4 right-4 inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        className="absolute top-3 right-3 md:top-4 md:right-4 inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white"
         aria-label="Close image viewer"
       >
         <X size={18} />
       </button>
-      <div className="relative w-[92vw] h-[92vh]" onClick={(e) => e.stopPropagation()}>
-        <Image src={src!} alt={alt} fill className="object-contain select-none" priority />
+      <div className="relative w-[96vw] h-[92vh] md:w-[92vw]" onClick={(e) => e.stopPropagation()}>
+        <Image src={src} alt={alt} fill className="object-contain select-none" priority />
       </div>
     </div>
   );
@@ -387,6 +388,130 @@ const CollageItem: React.FC<{
   </div>
 );
 
+/* ── Mobile Nav ── */
+const MobileNav: React.FC<{ open: boolean; setOpen: (v: boolean) => void }> = ({ open, setOpen }) => (
+  <>
+    <button
+      className="md:hidden inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-2"
+      onClick={() => setOpen(!open)}
+      aria-label="Toggle navigation"
+    >
+      <Menu size={18} />
+      Menu
+    </button>
+    {open && (
+      <div className="md:hidden absolute left-0 right-0 top-full z-30 bg-black/70 backdrop-blur border-t border-white/10">
+        <nav className="px-6 py-4 grid gap-3 text-white/90">
+          {[
+            ["Home", "#home"],
+            ["About", "#about"],
+            ["Venue", "#venue"],
+            ["Line Up", "#lineup"],
+            ["Volunteer Info", "#volunteer"],
+            ["Sponsorship", "#sponsorship"],
+            ["Photo Gallery", "#gallery"],
+            ["Board", "#board"],
+            ["Contact Us", "#contact"],
+          ].map(([label, href]) => (
+            <a key={href} href={href} className="py-2 border-b border-white/10 last:border-b-0" onClick={() => setOpen(false)}>
+              {label}
+            </a>
+          ))}
+        </nav>
+      </div>
+    )}
+  </>
+);
+
+/* ── Contact Form (client) ── */
+const ContactForm: React.FC = () => {
+  const [ok, setOk] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setOk(null);
+    setError(null);
+
+    const fd = new FormData(e.currentTarget);
+    const name = String(fd.get("name") || "");
+    const email = String(fd.get("email") || "");
+    const subject = String(fd.get("subject") || "");
+    const message = String(fd.get("message") || "");
+
+    if (!name || !email || !message) {
+      setError("Please fill out your name, email, and message.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, subject, message }),
+      });
+
+      const data: unknown = await res.json();
+      if (!res.ok) {
+        const msg =
+          typeof data === "object" && data && "error" in (data as Record<string, unknown>)
+            ? String((data as Record<string, unknown>).error)
+            : "Something went wrong. Please try again.";
+        setError(msg);
+        return;
+      }
+
+      setOk("Message sent! We’ll get back to you shortly.");
+      formRef.current?.reset();
+    } catch {
+      setError("Network error. Please try again.");
+    }
+  }
+
+  return (
+    <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4">
+      <div className="grid md:grid-cols-2 gap-4">
+        <input
+          name="name"
+          placeholder="Your name"
+          className="rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]"
+          required
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Your email"
+          className="rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]"
+          required
+        />
+      </div>
+      <input
+        name="subject"
+        placeholder="Subject (optional)"
+        className="rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF]"
+      />
+      <textarea
+        name="message"
+        placeholder="Your message"
+        rows={5}
+        className="rounded-lg bg-black/30 border border-white/20 px-3 py-2 outline-none focus:ring-2 focus:ring-[#00E0FF] resize-y"
+        required
+      />
+      <div className="flex items-center gap-3">
+        <Button
+          type="submit"
+          className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_25px_rgba(225,6,0,0.45)]"
+        >
+          Send Message
+        </Button>
+        {ok && <span className="text-emerald-300">{ok}</span>}
+        {error && <span className="text-red-300">{error}</span>}
+      </div>
+    </form>
+  );
+};
+
 /* ── Page ── */
 export default function Page() {
   const { d, h, m, s } = useCountdown(EVENT_DATE);
@@ -394,9 +519,10 @@ export default function Page() {
   React.useEffect(() => setHydrated(true), []);
 
   const [ticketsOpen, setTicketsOpen] = React.useState(false);
-
   const [lightboxSrc, setLightboxSrc] = React.useState<string | null>(null);
   const [lightboxAlt, setLightboxAlt] = React.useState<string>("");
+
+  const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const openLightbox = (src: string, alt: string) => {
     setLightboxSrc(src);
@@ -420,7 +546,7 @@ export default function Page() {
   // Advisors
   const advisors: Driver[] = [
     { name: "Rhea Joshi", title: "Advisor", img: "/board/advisors/rhea.jpeg" },
-    { name: "Arya Biju",  title: "Advisor", img: "/board/advisors/arya.jpeg" },
+    { name: "Arya Biju", title: "Advisor", img: "/board/advisors/arya.jpeg" },
   ];
 
   // Logistics
@@ -432,8 +558,8 @@ export default function Page() {
 
   // Finance
   const finance: Driver[] = [
-    { name: "Khushi Patel",   title: "Finance", img: "/board/finance/khuship.jpeg" },
-    { name: "Jay Vellanki",   title: "Finance", img: "/board/finance/jay.jpeg" },
+    { name: "Khushi Patel", title: "Finance", img: "/board/finance/khuship.jpeg" },
+    { name: "Jay Vellanki", title: "Finance", img: "/board/finance/jay.jpeg" },
     { name: "Manvitha Edara", title: "Finance", img: "/board/finance/manvi.jpeg" },
   ];
 
@@ -445,10 +571,10 @@ export default function Page() {
 
   // Liaison Coordinators
   const liaisonCoordinators: Driver[] = [
-    { name: "Mahak Rawal",         title: "Liaison Coordinator", img: "/board/lc/mahak.jpg" },
-    { name: "Prakrit Sinha",       title: "Liaison Coordinator", img: "/board/lc/prakrit.jpg" },
-    { name: "Tamanna Vijay",       title: "Liaison Coordinator", img: "/board/lc/tamanna.jpg" },
-    { name: "Mahintha Karthik",    title: "Liaison Coordinator", img: "/board/lc/mahintha.jpg" },
+    { name: "Mahak Rawal", title: "Liaison Coordinator", img: "/board/lc/mahak.jpg" },
+    { name: "Prakrit Sinha", title: "Liaison Coordinator", img: "/board/lc/prakrit.jpg" },
+    { name: "Tamanna Vijay", title: "Liaison Coordinator", img: "/board/lc/tamanna.jpg" },
+    { name: "Mahintha Karthik", title: "Liaison Coordinator", img: "/board/lc/mahintha.jpg" },
   ];
 
   // After Party
@@ -459,36 +585,36 @@ export default function Page() {
 
   // Mixer
   const mixer: Driver[] = [
-    { name: "Sarvani Nookala",  title: "Mixer", img: "/board/mixer/sarvani.jpeg" },
-    { name: "Sathvika Seeram",  title: "Mixer", img: "/board/mixer/sathvika.jpeg" },
-    { name: "Samarth Bikki",    title: "Mixer", img: "/board/mixer/samarth.jpeg" },
+    { name: "Sarvani Nookala", title: "Mixer", img: "/board/mixer/sarvani.jpeg" },
+    { name: "Sathvika Seeram", title: "Mixer", img: "/board/mixer/sathvika.jpeg" },
+    { name: "Samarth Bikki", title: "Mixer", img: "/board/mixer/samarth.jpeg" },
   ];
 
   // Registration
   const registration: Driver[] = [
     { name: "Aarya Chipalkatti", title: "Registration", img: "/board/reg/aarya.jpg" },
-    { name: "Sai Mariappan",     title: "Registration", img: "/board/reg/sai.jpg" },
+    { name: "Sai Mariappan", title: "Registration", img: "/board/reg/sai.jpg" },
   ];
 
   // Hospitality
   const hospitality: Driver[] = [
-    { name: "Olivia Riju",        title: "Hospitality", img: "/board/hosp/olivia.jpg" },
-    { name: "Saloni Janorkar",    title: "Hospitality", img: "/board/hosp/saloni.jpg" },
-    { name: "Tarana Nagarajan",   title: "Hospitality", img: "/board/hosp/tarana.jpg" },
+    { name: "Olivia Riju", title: "Hospitality", img: "/board/hosp/olivia.jpg" },
+    { name: "Saloni Janorkar", title: "Hospitality", img: "/board/hosp/saloni.jpg" },
+    { name: "Tarana Nagarajan", title: "Hospitality", img: "/board/hosp/tarana.jpg" },
   ];
 
   // Marketing
   const marketing: Driver[] = [
     { name: "Khushi Aggarwal", title: "Marketing", img: "/board/marketing/khushia.jpg" },
     { name: "Sai Manchikanti", title: "Marketing", img: "/board/marketing/saij.jpg" },
-    { name: "Giana Abraham",   title: "Marketing", img: "/board/marketing/giana.jpg" },
+    { name: "Giana Abraham", title: "Marketing", img: "/board/marketing/giana.jpg" },
   ];
 
   // Graphics
   const graphics: Driver[] = [
-    { name: "Pranav Cherala",   title: "Graphics", img: "/board/graphics/pranav.jpg" },
-    { name: "Shreya Sil",       title: "Graphics", img: "/board/graphics/shreyas.jpg" },
-    { name: "Drshika Chenna",   title: "Graphics", img: "/board/graphics/drshika.jpg" },
+    { name: "Pranav Cherala", title: "Graphics", img: "/board/graphics/pranav.jpg" },
+    { name: "Shreya Sil", title: "Graphics", img: "/board/graphics/shreyas.jpg" },
+    { name: "Drshika Chenna", title: "Graphics", img: "/board/graphics/drshika.jpg" },
   ];
 
   // Gallery sources
@@ -546,6 +672,8 @@ export default function Page() {
             </div>
             <span className="font-bold tracking-wider">Awaazein 2026</span>
           </div>
+
+          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-white/90">
             <a href="#home" className="hover:text-white">Home</a>
             <a href="#about" className="hover:text-white">About</a>
@@ -563,16 +691,21 @@ export default function Page() {
               Tickets
             </Button>
           </nav>
+
+          {/* Mobile nav trigger */}
+          <div className="md:hidden">
+            <MobileNav open={mobileOpen} setOpen={setMobileOpen} />
+          </div>
         </div>
 
         {/* HUD countdown bar */}
-        <div className="sticky top-14 z-20">
-          <div className="mx-auto max-w-6xl px-6 pb-2">
-            <div className="rounded-xl bg-black/45 border border-white/15 backdrop-blur grid grid-flow-col auto-cols-max gap-4 px-4 py-2">
+        <div className="sticky top-14 z-20 md:top-16">
+          <div className="mx-auto max-w-6xl px-3 md:px-6 pb-2">
+            <div className="rounded-xl bg-black/55 border border-white/15 backdrop-blur grid grid-cols-4 gap-2 md:grid-flow-col md:auto-cols-max md:gap-4 px-3 py-2">
               {["Days", "Hours", "Minutes", "Seconds"].map((lbl, idx) => (
-                <div key={lbl} className="flex items-baseline gap-2">
-                  <span className="text-xs uppercase text-white/70 tracking-widest">{lbl}</span>
-                  <span className="font-mono text-lg" suppressHydrationWarning>
+                <div key={lbl} className="flex items-baseline justify-center md:justify-start gap-2">
+                  <span className="text-[10px] md:text-xs uppercase text-white/60 tracking-widest">{lbl}</span>
+                  <span className="font-mono text-base md:text-lg" suppressHydrationWarning>
                     {hydrated ? [d, h, m, s][idx].toString().padStart(2, "0") : "--"}
                   </span>
                 </div>
@@ -610,7 +743,6 @@ export default function Page() {
               </Button>
             </div>
 
-            {/* Stats */}
             <div className="mt-8 grid sm:grid-cols-3 gap-6">
               <Stat label="Date" value={formatEventDate(EVENT_DATE)} icon={<CalendarDays size={18} />} />
               <Stat label="Venue" value={VENUE} icon={<MapPin size={18} />} />
@@ -618,9 +750,8 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Circular logo */}
           <div className="relative rounded-2xl border border-white/20 bg-black/30 p-6 md:p-8">
-            <div className="relative h-80 w-80 md:h-[26rem] md:w-[26rem] rounded-full overflow-hidden ring-2 ring-white/25 shadow-[0_0_100px_rgba(0,224,255,0.45)] mx-auto">
+            <div className="relative h-64 w-64 md:h-[26rem] md:w-[26rem] rounded-full overflow-hidden ring-2 ring-white/25 shadow-[0_0_100px_rgba(0,224,255,0.45)] mx-auto">
               <Image src="/awz-logo.png" alt="Awaazein Logo" fill className="object-contain bg-transparent" priority />
             </div>
           </div>
@@ -650,7 +781,6 @@ export default function Page() {
       <Section id="about" title="About Awaazein">
         <FadeIn>
           <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* Text */}
             <div className="order-2 md:order-1">
               <p className="text-white/95 text-lg md:text-xl leading-relaxed md:leading-8">
                 Awaazein is DFW&rsquo;s premier South Asian a-capella competition. Translating to
@@ -675,7 +805,6 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Image (clickable) */}
             <div className="order-1 md:order-2">
               <div
                 className="group relative w-full aspect-[16/9] rounded-xl overflow-hidden ring-1 ring-white/15 cursor-zoom-in"
@@ -800,7 +929,6 @@ export default function Page() {
       <Section id="volunteer" title="Interested in Being a Volunteer?">
         <FadeIn>
           <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* Text */}
             <div className="order-2 md:order-1">
               <p className="text-white/95 text-lg md:text-xl leading-relaxed md:leading-8">
                 Be a part of our Awaazein Family and see the behind-the-scenes of our competition!
@@ -823,7 +951,6 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Image (clickable) */}
             <div className="order-1 md:order-2 md:-mt-10 lg:-mt-16">
               <div
                 className="group relative w-full aspect-[16/9] rounded-3xl overflow-hidden ring-1 ring-white/15 cursor-zoom-in"
@@ -848,7 +975,6 @@ export default function Page() {
       <Section id="sponsorship" title="Sponsorship & Donations">
         <FadeIn>
           <div className="grid md:grid-cols-2 gap-6 lg:gap-10 items-start">
-            {/* Sponsorship */}
             <div className={cx("rounded-2xl p-6 md:p-7", theme.ring, theme.panel)}>
               <h3 className="text-xl md:text-2xl font-extrabold mb-3">Sponsor Awaazein</h3>
               <p className="text-white/95">
@@ -870,7 +996,6 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Donations */}
             <div className={cx("rounded-2xl p-6 md:p-7", theme.ring, theme.panel)}>
               <h3 className="text-xl md:text-2xl font-extrabold mb-3">Make a Donation</h3>
               <p className="text-white/95">
@@ -898,7 +1023,6 @@ export default function Page() {
 
       {/* BOARD — BEFORE Gallery */}
       <Section id="board" title="Meet Our Amazing Board Members">
-        {/* Directors */}
         <div className="mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Directors</h3>
         </div>
@@ -910,7 +1034,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Assistant Directors */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Assistant Directors</h3>
         </div>
@@ -922,7 +1045,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Advisors */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Advisors</h3>
         </div>
@@ -934,7 +1056,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Logistics */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Logistics</h3>
         </div>
@@ -946,7 +1067,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Finance */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Finance</h3>
         </div>
@@ -958,7 +1078,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Tech */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Tech</h3>
         </div>
@@ -970,7 +1089,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Liaison Coordinators */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Liaison Coordinators</h3>
         </div>
@@ -982,7 +1100,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* After Party */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">After Party</h3>
         </div>
@@ -994,7 +1111,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Mixer */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Mixer</h3>
         </div>
@@ -1006,7 +1122,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Registration */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Registration</h3>
         </div>
@@ -1018,7 +1133,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Hospitality */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Hospitality</h3>
         </div>
@@ -1030,7 +1144,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Marketing */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Marketing</h3>
         </div>
@@ -1042,7 +1155,6 @@ export default function Page() {
           </div>
         </FadeIn>
 
-        {/* Graphics */}
         <div className="mt-10 mb-4">
           <h3 className="text-2xl md:text-3xl font-extrabold">Graphics</h3>
         </div>
@@ -1079,118 +1191,22 @@ export default function Page() {
         <CheckeredDivider />
       </Section>
 
-      {/* CONTACT — inline state and safe reset */}
+      {/* CONTACT */}
       <Section id="contact" title="Contact Us">
         <FadeIn>
-          {(() => {
-            const [status, setStatus] = React.useState<{ ok?: string; error?: string }>({});
-            const [loading, setLoading] = React.useState(false);
-            const formRef = React.useRef<HTMLFormElement>(null);
-
-            async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-              e.preventDefault();
-              setStatus({});
-              setLoading(true);
-
-              const fd = new FormData(e.currentTarget);
-              const payload = {
-                name: String(fd.get("name") || "").trim(),
-                email: String(fd.get("email") || "").trim(),
-                subject: String(fd.get("subject") || "").trim(),
-                message: String(fd.get("message") || "").trim(),
-              };
-
-              try {
-                const res = await fetch("/api/contact", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(payload),
-                });
-
-                let data: any = null;
-                try { data = await res.json(); } catch {}
-
-                if (!res.ok || (data && data.error)) {
-                  throw new Error(data?.error || "Something went wrong. Please try again.");
-                }
-
-                setStatus({ ok: "Thanks! Your message was sent." });
-                formRef.current?.reset();
-              } catch (err: unknown) {
-                const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
-                setStatus({ error: msg });
-              } finally {
-                setLoading(false);
-              }
-            }
-
-            return (
-              <div className={cx("rounded-2xl p-8 border", theme.ring, theme.panel)}>
-                <p className="text-white/95 mb-6">
-                  For inquiries, sponsorships, or volunteering, reach out and we&rsquo;ll get back quickly.
-                </p>
-
-                <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4">
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <label className="grid gap-1">
-                      <span className="text-sm text-white/80">Name</span>
-                      <input
-                        name="name"
-                        required
-                        className="rounded-md bg-black/30 border border-white/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-[#00E0FF]"
-                        placeholder="Your name"
-                      />
-                    </label>
-
-                    <label className="grid gap-1">
-                      <span className="text-sm text-white/80">Email</span>
-                      <input
-                        name="email"
-                        type="email"
-                        required
-                        className="rounded-md bg-black/30 border border-white/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-[#00E0FF]"
-                        placeholder="you@example.com"
-                      />
-                    </label>
-                  </div>
-
-                  <label className="grid gap-1">
-                    <span className="text-sm text-white/80">Subject</span>
-                    <input
-                      name="subject"
-                      required
-                      className="rounded-md bg-black/30 border border-white/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-[#00E0FF]"
-                      placeholder="What’s this about?"
-                    />
-                  </label>
-
-                  <label className="grid gap-1">
-                    <span className="text-sm text-white/80">Message</span>
-                    <textarea
-                      name="message"
-                      required
-                      rows={5}
-                      className="rounded-md bg-black/30 border border-white/20 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-[#00E0FF] resize-vertical"
-                      placeholder="Say hello!"
-                    />
-                  </label>
-
-                  <div className="flex items-center gap-3">
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-[#E10600] hover:bg-[#c70500] shadow-[0_0_30px_rgba(225,6,0,0.6)]"
-                    >
-                      {loading ? "Sending…" : "Send Message"}
-                    </Button>
-
-                    {status.ok && <span className="text-sm text-emerald-300">{status.ok}</span>}
-                    {status.error && <span className="text-sm text-red-300">{status.error}</span>}
-                  </div>
-                </form>
-              </div>
-            );
-          })()}
+          <div className={cx("rounded-2xl p-8 border space-y-6", theme.ring, theme.panel)}>
+            <p className="text-white/95">
+              For inquiries, sponsorships, or volunteering, reach out and we&rsquo;ll get back quickly.
+            </p>
+            <ContactForm />
+            <div className="pt-2">
+              <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10">
+                <a href="mailto:awaazeinexec@gmail.com" className="inline-flex items-center gap-2">
+                  <Mail size={18} /> Or email us directly
+                </a>
+              </Button>
+            </div>
+          </div>
         </FadeIn>
       </Section>
 
